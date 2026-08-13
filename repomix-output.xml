@@ -1,0 +1,1070 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+public/
+  file.svg
+  globe.svg
+  next.svg
+  vercel.svg
+  window.svg
+scripts/
+  importar-convidados.mjs
+src/
+  app/
+    convite/
+      [slug]/
+        convite-client.tsx
+        page.tsx
+    favicon.ico
+    globals.css
+    layout.tsx
+    page.tsx
+  components/
+    qr-code-after.tsx
+  lib/
+    pix.ts
+    supabase-functions.ts
+supabase/
+  functions/
+    confirmar-presenca/
+      index.ts
+    get-convidado/
+      index.ts
+  migrations/
+    0001_init.sql
+.gitignore
+AGENTS.md
+CLAUDE.md
+convidados.csv
+eslint.config.mjs
+next-env.d.ts
+next.config.ts
+package.json
+postcss.config.mjs
+README.md
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="public/file.svg">
+<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
+</file>
+
+<file path="public/globe.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
+</file>
+
+<file path="public/next.svg">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
+</file>
+
+<file path="public/vercel.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+</file>
+
+<file path="public/window.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
+</file>
+
+<file path="src/app/convite/[slug]/convite-client.tsx">
+"use client";
+
+import { useState } from "react";
+import { confirmarPresenca, type Convidado } from "@/lib/supabase-functions";
+import QrCodeAfter from "@/components/qr-code-after";
+
+const ETAPAS_POR_PERFIL: Record<Convidado["perfil"], { key: EtapaKey; label: string }[]> = {
+  cerimonia_festa_after: [
+    { key: "confirmou_cerimonia", label: "Cerimônia" },
+    { key: "confirmou_festa", label: "Festa" },
+    { key: "confirmou_after", label: "After" },
+  ],
+  festa_after: [
+    { key: "confirmou_festa", label: "Festa" },
+    { key: "confirmou_after", label: "After" },
+  ],
+};
+
+type EtapaKey = "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after";
+
+export default function ConviteClient({ convidadoInicial }: { convidadoInicial: Convidado }) {
+  const [convidado, setConvidado] = useState(convidadoInicial);
+  const [respostas, setRespostas] = useState<Partial<Record<EtapaKey, boolean>>>({});
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const etapas = ETAPAS_POR_PERFIL[convidado.perfil];
+  const jaRespondeu = !!convidado.respondido_em;
+
+  function handleToggle(key: EtapaKey, value: boolean) {
+    setRespostas((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSubmit() {
+    setSalvando(true);
+    setErro(null);
+    try {
+      const atualizado = await confirmarPresenca(convidado.slug, respostas);
+      setConvidado(atualizado);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao salvar sua confirmação");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  const todasEtapasRespondidas = etapas.every(
+    (etapa) => respostas[etapa.key] !== undefined || convidado[etapa.key] !== null
+  );
+
+  const confirmouAfter = convidado.confirmou_after ?? respostas.confirmou_after;
+
+  return (
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-[#faf7f2]">
+      <div className="max-w-md w-full space-y-8 text-center">
+        <div className="space-y-2">
+          <p className="text-sm tracking-widest uppercase text-neutral-500">Laura & Gu</p>
+          <h1 className="text-2xl font-serif text-neutral-800">Olá, {convidado.nome}!</h1>
+          <p className="text-neutral-600">
+            Confirme sua presença nas etapas abaixo para as quais você foi convidado(a).
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {etapas.map((etapa) => {
+            const valorAtual = respostas[etapa.key] ?? convidado[etapa.key] ?? undefined;
+            return (
+              <div
+                key={etapa.key}
+                className="flex items-center justify-between border border-neutral-200 rounded-xl px-4 py-3 bg-white"
+              >
+                <span className="font-medium text-neutral-800">{etapa.label}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleToggle(etapa.key, true)}
+                    className={`px-3 py-1 rounded-full text-sm border transition ${
+                      valorAtual === true
+                        ? "bg-neutral-800 text-white border-neutral-800"
+                        : "border-neutral-300 text-neutral-600"
+                    }`}
+                  >
+                    Vou
+                  </button>
+                  <button
+                    onClick={() => handleToggle(etapa.key, false)}
+                    className={`px-3 py-1 rounded-full text-sm border transition ${
+                      valorAtual === false
+                        ? "bg-neutral-800 text-white border-neutral-800"
+                        : "border-neutral-300 text-neutral-600"
+                    }`}
+                  >
+                    Não vou
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {erro && <p className="text-red-600 text-sm">{erro}</p>}
+
+        {Object.keys(respostas).length > 0 && (
+          <button
+            onClick={handleSubmit}
+            disabled={salvando}
+            className="w-full py-3 rounded-full bg-neutral-800 text-white font-medium disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : "Confirmar presença"}
+          </button>
+        )}
+
+        {jaRespondeu && Object.keys(respostas).length === 0 && (
+          <p className="text-sm text-neutral-500">Sua resposta já foi registrada. Obrigado!</p>
+        )}
+
+        {confirmouAfter === true && (
+          <QrCodeAfter slug={convidado.slug} valor={convidado.valor_after} />
+        )}
+      </div>
+    </main>
+  );
+}
+</file>
+
+<file path="src/app/convite/[slug]/page.tsx">
+import { notFound } from "next/navigation";
+import { getConvidado } from "@/lib/supabase-functions";
+import ConviteClient from "./convite-client";
+
+export default async function ConvitePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  let convidado;
+  try {
+    convidado = await getConvidado(slug);
+  } catch {
+    notFound();
+  }
+
+  if (!convidado) {
+    notFound();
+  }
+
+  return <ConviteClient convidadoInicial={convidado} />;
+}
+</file>
+
+<file path="src/app/globals.css">
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+</file>
+
+<file path="src/app/layout.tsx">
+import type { Metadata } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Laura & Gu | Confirme sua presença",
+  description: "Convite de casamento — confirmação de presença e pagamento do after",
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="pt-BR" className="h-full antialiased">
+      <body className="min-h-full flex flex-col font-sans">{children}</body>
+    </html>
+  );
+}
+</file>
+
+<file path="src/app/page.tsx">
+import Image from "next/image";
+
+export default function Home() {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+        <Image
+          className="dark:invert h-5 w-[100px]"
+          src="/next.svg"
+          alt="Next.js logo"
+          width={100}
+          height={20}
+          priority
+        />
+        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
+          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+            To get started, edit the{" "}
+            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
+              page.tsx
+            </code>{" "}
+            file.
+          </h1>
+          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+            Looking for a starting point or more instructions? Head over to{" "}
+            <a
+              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              className="font-medium text-zinc-950 dark:text-zinc-50"
+            >
+              Templates
+            </a>{" "}
+            or the{" "}
+            <a
+              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              className="font-medium text-zinc-950 dark:text-zinc-50"
+            >
+              Learning
+            </a>{" "}
+            center.
+          </p>
+        </div>
+        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+          <a
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
+            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              className="dark:invert h-[14px] w-4"
+              src="/vercel.svg"
+              alt="Vercel logomark"
+              width={16}
+              height={14}
+            />
+            Deploy Now
+          </a>
+          <a
+            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Documentation
+          </a>
+        </div>
+      </main>
+    </div>
+  );
+}
+</file>
+
+<file path="src/lib/pix.ts">
+import { createStaticPix, hasError } from "pix-utils";
+import QRCode from "qrcode";
+
+interface GerarPixQrCodeParams {
+  chavePix: string;
+  nomeRecebedor: string;
+  cidadeRecebedor: string;
+  valor: number; // a lib exige um valor fixo por QR Code (Pix estático)
+  identificador?: string; // ex: slug do convidado, aparece como referência
+}
+
+/**
+ * Gera o payload Pix (BR Code) e o QR Code correspondente em data URL (base64),
+ * pronto para ser usado num <img src="..." />.
+ */
+export async function gerarPixQrCode({
+  chavePix,
+  nomeRecebedor,
+  cidadeRecebedor,
+  valor,
+  identificador,
+}: GerarPixQrCodeParams) {
+  const pix = createStaticPix({
+    merchantName: nomeRecebedor,
+    merchantCity: cidadeRecebedor,
+    pixKey: chavePix,
+    transactionAmount: valor,
+    infoAdicional: identificador,
+  });
+
+  if (hasError(pix)) {
+    throw new Error("Não foi possível gerar o Pix: " + pix.error);
+  }
+
+  const payload = pix.toBRCode();
+  const qrCodeDataUrl = await QRCode.toDataURL(payload, {
+    margin: 1,
+    width: 320,
+  });
+
+  return { payload, qrCodeDataUrl };
+}
+</file>
+
+<file path="src/lib/supabase-functions.ts">
+export type Perfil = "cerimonia_festa_after" | "festa_after";
+
+export interface Convidado {
+  slug: string;
+  nome: string;
+  perfil: Perfil;
+  confirmou_cerimonia: boolean | null;
+  confirmou_festa: boolean | null;
+  confirmou_after: boolean | null;
+  status_pagamento_after: "pendente" | "pago" | "nao_aplicavel";
+  valor_after: number | null;
+  respondido_em: string | null;
+}
+
+const FUNCTIONS_URL = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL!;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+async function callFunction<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const res = await fetch(`${FUNCTIONS_URL}/${name}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${ANON_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || "Erro ao chamar função");
+  }
+
+  return data;
+}
+
+export async function getConvidado(slug: string) {
+  const { convidado } = await callFunction<{ convidado: Convidado }>("get-convidado", { slug });
+  return convidado;
+}
+
+export async function confirmarPresenca(
+  slug: string,
+  confirmacoes: Partial<Pick<Convidado, "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after">>
+) {
+  const { convidado } = await callFunction<{ convidado: Convidado }>("confirmar-presenca", {
+    slug,
+    ...confirmacoes,
+  });
+  return convidado;
+}
+</file>
+
+<file path="supabase/functions/confirmar-presenca/index.ts">
+// Edge Function: confirmar-presenca
+// Atualiza a confirmação de presença de um convidado, validando que ele só
+// confirme etapas para as quais foi de fato convidado (com base no perfil).
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+type Perfil = "cerimonia_festa_after" | "festa_after";
+
+const ETAPAS_POR_PERFIL: Record<Perfil, string[]> = {
+  cerimonia_festa_after: ["cerimonia", "festa", "after"],
+  festa_after: ["festa", "after"],
+};
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const { slug, confirmou_cerimonia, confirmou_festa, confirmou_after } = await req.json();
+
+    if (!slug || typeof slug !== "string") {
+      return new Response(JSON.stringify({ error: "slug é obrigatório" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Busca o convidado para saber o perfil e validar as etapas permitidas
+    const { data: convidado, error: fetchError } = await supabase
+      .from("convidados")
+      .select("id, perfil")
+      .eq("slug", slug)
+      .single();
+
+    if (fetchError || !convidado) {
+      return new Response(JSON.stringify({ error: "Convidado não encontrado" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const etapasPermitidas = ETAPAS_POR_PERFIL[convidado.perfil as Perfil];
+    const update: Record<string, unknown> = { respondido_em: new Date().toISOString() };
+
+    // Só grava o campo se a etapa for permitida para o perfil do convidado
+    if (etapasPermitidas.includes("cerimonia") && typeof confirmou_cerimonia === "boolean") {
+      update.confirmou_cerimonia = confirmou_cerimonia;
+    }
+    if (etapasPermitidas.includes("festa") && typeof confirmou_festa === "boolean") {
+      update.confirmou_festa = confirmou_festa;
+    }
+    if (etapasPermitidas.includes("after") && typeof confirmou_after === "boolean") {
+      update.confirmou_after = confirmou_after;
+      // Se confirmou o after, abre pendência de pagamento (o QR Code é exibido no client)
+      update.status_pagamento_after = confirmou_after ? "pendente" : "nao_aplicavel";
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from("convidados")
+      .update(update)
+      .eq("slug", slug)
+      .select(
+        "slug, nome, perfil, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
+      )
+      .single();
+
+    if (updateError) {
+      return new Response(JSON.stringify({ error: "Erro ao salvar confirmação" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ convidado: updated }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: "Erro inesperado" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
+</file>
+
+<file path="supabase/functions/get-convidado/index.ts">
+// Edge Function: get-convidado
+// Busca os dados de um convidado pelo slug. Usa a service role key
+// (RLS bloqueia o client anon, então essa function é o único caminho de leitura).
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const { slug } = await req.json();
+
+    if (!slug || typeof slug !== "string") {
+      return new Response(JSON.stringify({ error: "slug é obrigatório" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { data, error } = await supabase
+      .from("convidados")
+      .select(
+        "slug, nome, perfil, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
+      )
+      .eq("slug", slug)
+      .single();
+
+    if (error || !data) {
+      return new Response(JSON.stringify({ error: "Convidado não encontrado" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ convidado: data }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: "Erro inesperado" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
+</file>
+
+<file path="supabase/migrations/0001_init.sql">
+-- Convite de Casamento Laura & Gu
+-- Tabela principal de convidados
+
+create table if not exists convidados (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  nome text not null,
+  perfil text not null check (perfil in ('cerimonia_festa_after', 'festa_after')),
+
+  confirmou_cerimonia boolean,
+  confirmou_festa boolean,
+  confirmou_after boolean,
+
+  status_pagamento_after text not null default 'nao_aplicavel'
+    check (status_pagamento_after in ('pendente', 'pago', 'nao_aplicavel')),
+
+  valor_after numeric(10,2),
+
+  criado_em timestamptz not null default now(),
+  respondido_em timestamptz
+);
+
+create index if not exists idx_convidados_slug on convidados (slug);
+
+-- RLS ligado: ninguém acessa direto pelo client.
+-- Toda leitura/escrita passa pelas Edge Functions (service role key),
+-- que validam o slug antes de expor ou alterar qualquer registro.
+alter table convidados enable row level security;
+
+-- Nenhuma policy criada de propósito = client anon fica totalmente bloqueado.
+-- As Edge Functions usam a service role key, que ignora RLS.
+
+comment on table convidados is 'Convidados do casamento Laura & Gu — acesso somente via Edge Functions por slug';
+</file>
+
+<file path=".gitignore">
+node_modules
+.next
+.env.local
+.env
+convidados-links.csv
+</file>
+
+<file path="AGENTS.md">
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+</file>
+
+<file path="CLAUDE.md">
+@AGENTS.md
+</file>
+
+<file path="convidados.csv">
+nome,perfil
+Pedro Schuster,cerimonia_festa_after
+Aléxia Chaves,festa_after
+Gustavo,cerimonia_festa_after
+Laura,festa_after
+</file>
+
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="next-env.d.ts">
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/dev/types/routes.d.ts";
+import "./.next/dev/types/root-params.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+</file>
+
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+</file>
+
+<file path="README.md">
+# Convite de Casamento — Laura & Gu
+
+Projeto standalone (fora do Nexofy) para convite digital com confirmação de
+presença por etapa e QR Code Pix para o after.
+
+## 1. Configurar o Supabase
+
+1. No projeto Supabase novo, rode a migration:
+   ```
+   supabase db push
+   ```
+   ou cole o conteúdo de `supabase/migrations/0001_init.sql` no SQL Editor do painel.
+
+2. Faça o deploy das Edge Functions:
+   ```
+   supabase functions deploy get-convidado
+   supabase functions deploy confirmar-presenca
+   ```
+
+3. Configure os secrets das functions (não vão no `.env` do Next):
+   ```
+   supabase secrets set SUPABASE_URL=https://<project-ref>.supabase.co
+   supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<sua service role key>
+   ```
+
+## 2. Configurar o Next.js
+
+Copie `.env.example` para `.env.local` e preencha:
+- `NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL` → `https://<project-ref>.supabase.co/functions/v1`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` → chave anon do projeto
+- `NEXT_PUBLIC_PIX_KEY`, `NEXT_PUBLIC_PIX_NOME`, `NEXT_PUBLIC_PIX_CIDADE` → dados do Pix
+- `NEXT_PUBLIC_VALOR_AFTER_PADRAO` → valor cobrado por pessoa no after (ex: `80.00`)
+
+```
+npm install
+npm run dev
+```
+
+## 3. Importar convidados em massa
+
+Monte um CSV `convidados.csv`:
+```csv
+nome,perfil
+João Silva,cerimonia_festa_after
+Maria Souza,festa_after
+```
+
+Rode:
+```
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... SITE_URL=https://seu-dominio.com \
+npm run importar-convidados -- convidados.csv
+```
+
+Isso insere todos no banco e gera `convidados-links.csv` com nome + slug + link
+pronto para disparar manualmente (WhatsApp, e-mail etc).
+
+## 4. Deploy
+
+Recomendado: Vercel.
+```
+vercel
+```
+Configure as mesmas env vars do `.env.local` no painel da Vercel.
+
+## Estrutura
+
+- `src/app/convite/[slug]/` — página do convite, personalizada por convidado
+- `src/lib/supabase-functions.ts` — client para chamar as Edge Functions
+- `src/lib/pix.ts` — geração do payload Pix (BR Code) + QR Code
+- `supabase/functions/get-convidado` — busca convidado por slug
+- `supabase/functions/confirmar-presenca` — grava confirmação, valida etapas por perfil
+- `supabase/migrations/0001_init.sql` — schema da tabela `convidados`
+- `scripts/importar-convidados.mjs` — import em massa via CSV
+
+## Segurança
+
+RLS está ativado na tabela `convidados` sem nenhuma policy — o client anon não
+acessa a tabela diretamente. Toda leitura/escrita passa pelas Edge Functions
+(que usam a service role key), e a function `confirmar-presenca` só grava as
+etapas permitidas pelo perfil do convidado, mesmo que o payload enviado tente
+forçar outra coisa.
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules", "supabase/functions"]
+}
+</file>
+
+<file path="scripts/importar-convidados.mjs">
+// Importa convidados a partir de um CSV e gera o link individual de cada um.
+//
+// Formato esperado do CSV (com header), ex: convidados.csv
+//   nome,perfil
+//   João Silva,cerimonia_festa_after
+//   Maria Souza,festa_after
+//
+// Uso:
+//   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... SITE_URL=https://convite-laura-gu.vercel.app \
+//   node scripts/importar-convidados.mjs convidados.csv
+//
+// Gera convidados-links.csv com nome, slug e link pronto para disparo manual.
+
+import { createClient } from "@supabase/supabase-js";
+import { readFileSync, writeFileSync } from "node:fs";
+
+const [, , csvPath] = process.argv;
+
+if (!csvPath) {
+  console.error("Uso: node scripts/importar-convidados.mjs <arquivo.csv>");
+  process.exit(1);
+}
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SITE_URL = process.env.SITE_URL || "https://casamentogulau.vercel.app";
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error("Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY nas variáveis de ambiente.");
+  process.exit(1);
+}
+
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+function gerarSlug(nome, usados) {
+  const base = nome
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-");
+
+  let slug = base;
+  let contador = 2;
+  while (usados.has(slug)) {
+    slug = `${base}-${contador}`;
+    contador++;
+  }
+  usados.add(slug);
+  return slug;
+}
+
+function parseCsv(conteudo) {
+  const linhas = conteudo.trim().split("\n");
+  const header = linhas[0].split(",").map((h) => h.trim());
+  return linhas.slice(1).map((linha) => {
+    const valores = linha.split(",").map((v) => v.trim());
+    return Object.fromEntries(header.map((h, i) => [h, valores[i]]));
+  });
+}
+
+async function main() {
+  const conteudo = readFileSync(csvPath, "utf-8");
+  const registros = parseCsv(conteudo);
+  const slugsUsados = new Set();
+  const resultado = [];
+
+  for (const registro of registros) {
+    const { nome, perfil } = registro;
+
+    if (!nome || !perfil) {
+      console.warn("Linha inválida, pulando:", registro);
+      continue;
+    }
+    if (!["cerimonia_festa_after", "festa_after"].includes(perfil)) {
+      console.warn(`Perfil inválido para "${nome}": ${perfil}, pulando.`);
+      continue;
+    }
+
+    const slug = gerarSlug(nome, slugsUsados);
+
+    const { error } = await supabase.from("convidados").insert({ nome, perfil, slug });
+
+    if (error) {
+      console.error(`Erro ao inserir "${nome}":`, error.message);
+      continue;
+    }
+
+    resultado.push({ nome, slug, link: `${SITE_URL}/convite/${slug}` });
+  }
+
+  const csvSaida = [
+    "nome,slug,link",
+    ...resultado.map((r) => `${r.nome},${r.slug},${r.link}`),
+  ].join("\n");
+
+  writeFileSync("convidados-links.csv", csvSaida, "utf-8");
+  console.log(`\n${resultado.length} convidados importados. Links salvos em convidados-links.csv`);
+}
+
+main();
+</file>
+
+<file path="src/components/qr-code-after.tsx">
+"use client";
+
+import { useEffect, useState } from "react";
+import { gerarPixQrCode } from "@/lib/pix";
+
+// Dados fixos do recebedor do Pix — ajustar quando definirem a chave real
+const PIX_CONFIG = {
+  chavePix: process.env.NEXT_PUBLIC_PIX_KEY || "51999714595",
+  nomeRecebedor: process.env.NEXT_PUBLIC_PIX_NOME || "Laura e Gu",
+  cidadeRecebedor: process.env.NEXT_PUBLIC_PIX_CIDADE || "PORTO ALEGRE",
+};
+
+// Valor padrão do after, usado caso o convidado não tenha um valor específico no banco.
+const VALOR_AFTER_PADRAO = Number(process.env.NEXT_PUBLIC_VALOR_AFTER_PADRAO || "0");
+
+export default function QrCodeAfter({ slug, valor }: { slug: string; valor: number | null }) {
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const valorFinal = valor ?? VALOR_AFTER_PADRAO;
+
+  useEffect(() => {
+    if (!valorFinal) {
+      setErro("Valor do after ainda não foi definido. Configure NEXT_PUBLIC_VALOR_AFTER_PADRAO.");
+      return;
+    }
+    gerarPixQrCode({
+      ...PIX_CONFIG,
+      valor: valorFinal,
+      identificador: slug,
+    })
+      .then((res) => setQrCodeDataUrl(res.qrCodeDataUrl))
+      .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao gerar QR Code"));
+  }, [slug, valorFinal]);
+
+  return (
+    <div className="border border-neutral-200 rounded-xl p-6 bg-white space-y-3">
+      <p className="font-medium text-neutral-800">Pagamento do After</p>
+      <p className="text-sm text-neutral-600">
+        Escaneie o QR Code abaixo para pagar via Pix
+        {valorFinal ? ` (R$ ${valorFinal.toFixed(2)})` : ""}.
+      </p>
+      {erro && <p className="text-red-600 text-sm">{erro}</p>}
+      {qrCodeDataUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={qrCodeDataUrl} alt="QR Code Pix" className="mx-auto w-56 h-56" />
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "convite-laura-gu",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "importar-convidados": "node --env-file=.env.local scripts/importar-convidados.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "next": "16.3.0",
+    "pix-utils": "^2.8.2",
+    "qrcode": "^1.5.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+</file>
+
+</files>

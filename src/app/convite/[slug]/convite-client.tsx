@@ -51,12 +51,18 @@ export default function ConviteClient({ convidadoInicial }: { convidadoInicial: 
   const confirmouAfter = convidado.confirmou_after ?? respostas.confirmou_after;
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-[#faf7f2]">
-      <div className="max-w-md w-full space-y-8 text-center">
+    <main
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-neutral-900 bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: "url('/fundo-convite.jpg')" }}
+    >
+      {/* Overlay escuro para manter o texto legível sobre a foto */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      <div className="relative max-w-md w-full space-y-8 text-center">
         <div className="space-y-2">
-          <p className="text-sm tracking-widest uppercase text-neutral-500">Laura & Gu</p>
-          <h1 className="text-2xl font-serif text-neutral-800">Olá, {convidado.nome}!</h1>
-          <p className="text-neutral-600">
+          <p className="text-sm tracking-widest uppercase text-neutral-200">Laura & Gu</p>
+          <h1 className="text-2xl font-serif text-white">Olá, {convidado.nome}!</h1>
+          <p className="text-neutral-200">
             Confirme sua presença nas etapas abaixo para as quais você foi convidado(a).
           </p>
         </div>
@@ -67,7 +73,7 @@ export default function ConviteClient({ convidadoInicial }: { convidadoInicial: 
             return (
               <div
                 key={etapa.key}
-                className="flex items-center justify-between border border-neutral-200 rounded-xl px-4 py-3 bg-white"
+                className="flex items-center justify-between border border-neutral-200 rounded-xl px-4 py-3 bg-white/95 backdrop-blur-sm"
               >
                 <span className="font-medium text-neutral-800">{etapa.label}</span>
                 <div className="flex gap-2">
@@ -97,7 +103,7 @@ export default function ConviteClient({ convidadoInicial }: { convidadoInicial: 
           })}
         </div>
 
-        {erro && <p className="text-red-600 text-sm">{erro}</p>}
+        {erro && <p className="text-red-300 text-sm">{erro}</p>}
 
         {Object.keys(respostas).length > 0 && (
           <button
@@ -110,7 +116,7 @@ export default function ConviteClient({ convidadoInicial }: { convidadoInicial: 
         )}
 
         {jaRespondeu && Object.keys(respostas).length === 0 && (
-          <p className="text-sm text-neutral-500">Sua resposta já foi registrada. Obrigado!</p>
+          <p className="text-sm text-neutral-200">Sua resposta já foi registrada. Obrigado!</p>
         )}
 
         {confirmouAfter === true && (
