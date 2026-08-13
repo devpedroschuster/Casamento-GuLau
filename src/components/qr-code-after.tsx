@@ -5,7 +5,7 @@ import { gerarPixQrCode } from "@/lib/pix";
 
 // Dados fixos do recebedor do Pix — ajustar quando definirem a chave real
 const PIX_CONFIG = {
-  chavePix: process.env.NEXT_PUBLIC_PIX_KEY || "chave-pix-a-definir",
+  chavePix: process.env.NEXT_PUBLIC_PIX_KEY || "51999714595",
   nomeRecebedor: process.env.NEXT_PUBLIC_PIX_NOME || "Laura e Gu",
   cidadeRecebedor: process.env.NEXT_PUBLIC_PIX_CIDADE || "PORTO ALEGRE",
 };

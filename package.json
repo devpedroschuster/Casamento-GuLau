@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "importar-convidados": "node scripts/importar-convidados.mjs"
+    "importar-convidados": "node --env-file=.env.local scripts/importar-convidados.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
