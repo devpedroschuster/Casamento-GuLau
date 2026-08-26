@@ -10,7 +10,7 @@ const PIX_CONFIG = {
   cidadeRecebedor: process.env.NEXT_PUBLIC_PIX_CIDADE || "PORTO ALEGRE",
 };
 
-// Valor padrão do after, usado caso o convidado não tenha um valor específico no banco.
+// Valor padrão do after, usado caso a pessoa não tenha um valor específico no banco.
 const VALOR_AFTER_PADRAO = Number(process.env.NEXT_PUBLIC_VALOR_AFTER_PADRAO || "0");
 
 export default function QrCodeAfter({ slug, valor }: { slug: string; valor: number | null }) {
@@ -34,7 +34,7 @@ export default function QrCodeAfter({ slug, valor }: { slug: string; valor: numb
   }, [slug, valorFinal]);
 
   return (
-    <div className="border border-neutral-200 rounded-xl p-6 bg-white space-y-3">
+    <div className="border border-neutral-200 rounded-xl p-4 bg-white space-y-3">
       <p className="font-medium text-neutral-800">Pagamento do After</p>
       <p className="text-sm text-neutral-600">
         Escaneie o QR Code abaixo para pagar via Pix
@@ -43,7 +43,7 @@ export default function QrCodeAfter({ slug, valor }: { slug: string; valor: numb
       {erro && <p className="text-red-600 text-sm">{erro}</p>}
       {qrCodeDataUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={qrCodeDataUrl} alt="QR Code Pix" className="mx-auto w-56 h-56" />
+        <img src={qrCodeDataUrl} alt="QR Code Pix" className="mx-auto w-48 h-48" />
       )}
     </div>
   );

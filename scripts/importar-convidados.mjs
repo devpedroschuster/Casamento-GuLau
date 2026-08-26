@@ -1,18 +1,29 @@
-// Importa convidados a partir de um CSV e gera o link individual de cada um.
+// Importa convites (grupos) e seus convidados (pessoas) a partir de um CSV.
 //
 // Formato esperado do CSV (com header), ex: convidados.csv
-//   nome,perfil
-//   João Silva,cerimonia_festa_after
-//   Maria Souza,festa_after
+//   grupo,nome_exibicao,nome,perfil
+//   1,Pedro e Aléxia,Pedro Schuster,cerimonia_festa_after
+//   1,Pedro e Aléxia,Aléxia Chaves,cerimonia_festa_after
+//   2,Gustavo,Gustavo,cerimonia_festa_after
+//   3,Laura,Laura,festa_after
+//
+// - "grupo": qualquer identificador (número ou texto) que agrupe as pessoas
+//   que recebem o mesmo convite/mensagem. Repetido em cada linha do grupo.
+// - "nome_exibicao": como o grupo é chamado na saudação da mensagem
+//   (ex: "Olá, Pedro e Aléxia!"). Repetido em cada linha do grupo.
+// - "nome": nome da pessoa, é o que ela vai digitar no site pra se achar.
+// - "perfil": cerimonia_festa_after | festa_after — igual pra todo o grupo.
 //
 // Uso:
-//   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... SITE_URL=https://convite-laura-gu.vercel.app \
+//   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... \
 //   node scripts/importar-convidados.mjs convidados.csv
 //
-// Gera convidados-links.csv com nome, slug e link pronto para disparo manual.
+// Não gera mais links individuais — o convite é o mesmo site pra todo mundo,
+// e cada grupo recebe apenas a mensagem personalizada por WhatsApp/e-mail,
+// sem link exclusivo (ex: "Olá, Pedro e Aléxia! Confirme em https://...").
 
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 const [, , csvPath] = process.argv;
 
@@ -23,7 +34,6 @@ if (!csvPath) {
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SITE_URL = process.env.SITE_URL || "https://casamentogulau.vercel.app";
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   console.error("Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY nas variáveis de ambiente.");
@@ -31,25 +41,6 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-
-function gerarSlug(nome, usados) {
-  const base = nome
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-");
-
-  let slug = base;
-  let contador = 2;
-  while (usados.has(slug)) {
-    slug = `${base}-${contador}`;
-    contador++;
-  }
-  usados.add(slug);
-  return slug;
-}
 
 function parseCsv(conteudo) {
   const linhas = conteudo.trim().split("\n");
@@ -63,13 +54,13 @@ function parseCsv(conteudo) {
 async function main() {
   const conteudo = readFileSync(csvPath, "utf-8");
   const registros = parseCsv(conteudo);
-  const slugsUsados = new Set();
-  const resultado = [];
 
+  // Agrupa as linhas por "grupo"
+  const grupos = new Map();
   for (const registro of registros) {
-    const { nome, perfil } = registro;
+    const { grupo, nome_exibicao, nome, perfil } = registro;
 
-    if (!nome || !perfil) {
+    if (!grupo || !nome_exibicao || !nome || !perfil) {
       console.warn("Linha inválida, pulando:", registro);
       continue;
     }
@@ -78,25 +69,41 @@ async function main() {
       continue;
     }
 
-    const slug = gerarSlug(nome, slugsUsados);
+    if (!grupos.has(grupo)) {
+      grupos.set(grupo, { nome_exibicao, perfil, pessoas: [] });
+    }
+    grupos.get(grupo).pessoas.push(nome);
+  }
 
-    const { error } = await supabase.from("convidados").insert({ nome, perfil, slug });
+  let totalConvites = 0;
+  let totalPessoas = 0;
 
-    if (error) {
-      console.error(`Erro ao inserir "${nome}":`, error.message);
+  for (const [grupo, dados] of grupos) {
+    const { data: convite, error: conviteError } = await supabase
+      .from("convites")
+      .insert({ nome_exibicao: dados.nome_exibicao, perfil: dados.perfil })
+      .select("id")
+      .single();
+
+    if (conviteError || !convite) {
+      console.error(`Erro ao criar convite do grupo "${grupo}":`, conviteError?.message);
       continue;
     }
 
-    resultado.push({ nome, slug, link: `${SITE_URL}/convite/${slug}` });
+    const { error: pessoasError } = await supabase
+      .from("convidados")
+      .insert(dados.pessoas.map((nome) => ({ convite_id: convite.id, nome })));
+
+    if (pessoasError) {
+      console.error(`Erro ao inserir pessoas do grupo "${grupo}":`, pessoasError.message);
+      continue;
+    }
+
+    totalConvites++;
+    totalPessoas += dados.pessoas.length;
   }
 
-  const csvSaida = [
-    "nome,slug,link",
-    ...resultado.map((r) => `${r.nome},${r.slug},${r.link}`),
-  ].join("\n");
-
-  writeFileSync("convidados-links.csv", csvSaida, "utf-8");
-  console.log(`\n${resultado.length} convidados importados. Links salvos em convidados-links.csv`);
+  console.log(`\n${totalConvites} convites (grupos) importados, com ${totalPessoas} pessoas no total.`);
 }
 
 main();

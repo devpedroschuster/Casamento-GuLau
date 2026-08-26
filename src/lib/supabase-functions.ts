@@ -1,15 +1,21 @@
 export type Perfil = "cerimonia_festa_after" | "festa_after";
 
-export interface Convidado {
-  slug: string;
+export interface Pessoa {
+  id: string;
   nome: string;
-  perfil: Perfil;
   confirmou_cerimonia: boolean | null;
   confirmou_festa: boolean | null;
   confirmou_after: boolean | null;
   status_pagamento_after: "pendente" | "pago" | "nao_aplicavel";
   valor_after: number | null;
   respondido_em: string | null;
+}
+
+export interface Convite {
+  id: string;
+  nome_exibicao: string;
+  perfil: Perfil;
+  pessoas: Pessoa[];
 }
 
 const FUNCTIONS_URL = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL!;
@@ -34,17 +40,18 @@ async function callFunction<T>(name: string, body: Record<string, unknown>): Pro
   return data;
 }
 
-export async function getConvidado(slug: string) {
-  const { convidado } = await callFunction<{ convidado: Convidado }>("get-convidado", { slug });
-  return convidado;
+/** Busca o convite (grupo) a partir de um nome digitado pelo convidado. */
+export async function buscarConvite(busca: string) {
+  const { convite } = await callFunction<{ convite: Convite }>("buscar-convite", { busca });
+  return convite;
 }
 
 export async function confirmarPresenca(
-  slug: string,
-  confirmacoes: Partial<Pick<Convidado, "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after">>
+  convidadoId: string,
+  confirmacoes: Partial<Pick<Pessoa, "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after">>
 ) {
-  const { convidado } = await callFunction<{ convidado: Convidado }>("confirmar-presenca", {
-    slug,
+  const { convidado } = await callFunction<{ convidado: Pessoa }>("confirmar-presenca", {
+    convidado_id: convidadoId,
     ...confirmacoes,
   });
   return convidado;

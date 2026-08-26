@@ -42,6 +42,7 @@ The content is organized as follows:
 <directory_structure>
 public/
   file.svg
+  fundo-convite.jpg
   globe.svg
   next.svg
   vercel.svg
@@ -50,11 +51,8 @@ scripts/
   importar-convidados.mjs
 src/
   app/
-    convite/
-      [slug]/
-        convite-client.tsx
-        page.tsx
-    favicon.ico
+    busca-convite.tsx
+    convite-client.tsx
     globals.css
     layout.tsx
     page.tsx
@@ -65,12 +63,12 @@ src/
     supabase-functions.ts
 supabase/
   functions/
+    buscar-convite/
+      index.ts
     confirmar-presenca/
       index.ts
-    get-convidado/
-      index.ts
   migrations/
-    0001_init.sql
+    0002_convites_por_grupo.sql
 .gitignore
 AGENTS.md
 CLAUDE.md
@@ -86,6 +84,428 @@ tsconfig.json
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="src/app/busca-convite.tsx">
+"use client";
+
+import { useState } from "react";
+import { buscarConvite, type Convite } from "@/lib/supabase-functions";
+import ConviteClient from "./convite-client";
+
+export default function BuscaConvite() {
+  const [texto, setTexto] = useState("");
+  const [buscando, setBuscando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [convite, setConvite] = useState<Convite | null>(null);
+
+  async function handleBuscar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!texto.trim()) return;
+
+    setBuscando(true);
+    setErro(null);
+    try {
+      const resultado = await buscarConvite(texto.trim());
+      setConvite(resultado);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao buscar seu nome");
+      setConvite(null);
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  if (convite) {
+    return <ConviteClient conviteInicial={convite} onTrocarNome={() => setConvite(null)} />;
+  }
+
+  return (
+    <div className="space-y-6 text-center">
+      <div className="space-y-2">
+        <p className="text-sm tracking-widest uppercase text-neutral-200">Laura & Gu</p>
+        <h1 className="text-2xl font-serif text-white">Confirme sua presença</h1>
+        <p className="text-neutral-200">
+          Digite seu nome, exatamente como está no convite que você recebeu.
+        </p>
+      </div>
+
+      <form onSubmit={handleBuscar} className="space-y-3">
+        <input
+          type="text"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder="Digite seu nome"
+          className="w-full rounded-xl border border-neutral-200 bg-white/95 backdrop-blur-sm px-4 py-3 text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-800"
+          autoFocus
+        />
+        {erro && <p className="text-red-300 text-sm">{erro}</p>}
+        <button
+          type="submit"
+          disabled={buscando || !texto.trim()}
+          className="w-full py-3 rounded-full bg-neutral-800 text-white font-medium disabled:opacity-50"
+        >
+          {buscando ? "Buscando..." : "Buscar"}
+        </button>
+      </form>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/convite-client.tsx">
+"use client";
+
+import { useState } from "react";
+import { confirmarPresenca, type Convite, type Perfil, type Pessoa } from "@/lib/supabase-functions";
+import QrCodeAfter from "@/components/qr-code-after";
+
+type EtapaKey = "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after";
+
+const ETAPAS_POR_PERFIL: Record<Perfil, { key: EtapaKey; label: string }[]> = {
+  cerimonia_festa_after: [
+    { key: "confirmou_cerimonia", label: "Cerimônia" },
+    { key: "confirmou_festa", label: "Festa" },
+    { key: "confirmou_after", label: "After" },
+  ],
+  festa_after: [
+    { key: "confirmou_festa", label: "Festa" },
+    { key: "confirmou_after", label: "After" },
+  ],
+};
+
+export default function ConviteClient({
+  conviteInicial,
+  onTrocarNome,
+}: {
+  conviteInicial: Convite;
+  onTrocarNome: () => void;
+}) {
+  const [pessoas, setPessoas] = useState<Pessoa[]>(conviteInicial.pessoas);
+  const etapas = ETAPAS_POR_PERFIL[conviteInicial.perfil];
+
+  return (
+    <div className="space-y-8 text-center">
+      <div className="space-y-2">
+        <p className="text-sm tracking-widest uppercase text-neutral-200">Laura & Gu</p>
+        <h1 className="text-2xl font-serif text-white">Olá, {conviteInicial.nome_exibicao}!</h1>
+        <p className="text-neutral-200">
+          Confirme a presença de cada pessoa do grupo nas etapas para as quais foram convidados.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {pessoas.map((pessoa) => (
+          <PessoaCard
+            key={pessoa.id}
+            pessoa={pessoa}
+            etapas={etapas}
+            onAtualizar={(atualizada) =>
+              setPessoas((prev) => prev.map((p) => (p.id === atualizada.id ? atualizada : p)))
+            }
+          />
+        ))}
+      </div>
+
+      <button onClick={onTrocarNome} className="text-sm text-neutral-200 underline underline-offset-2">
+        Não é você? Buscar outro nome
+      </button>
+    </div>
+  );
+}
+
+function PessoaCard({
+  pessoa,
+  etapas,
+  onAtualizar,
+}: {
+  pessoa: Pessoa;
+  etapas: { key: EtapaKey; label: string }[];
+  onAtualizar: (pessoa: Pessoa) => void;
+}) {
+  const [respostas, setRespostas] = useState<Partial<Record<EtapaKey, boolean>>>({});
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const jaRespondeu = !!pessoa.respondido_em;
+  const houveAlteracao = Object.keys(respostas).length > 0;
+
+  function handleToggle(key: EtapaKey, value: boolean) {
+    setRespostas((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSubmit() {
+    setSalvando(true);
+    setErro(null);
+    try {
+      const atualizada = await confirmarPresenca(pessoa.id, respostas);
+      onAtualizar(atualizada);
+      setRespostas({});
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao salvar sua confirmação");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  const confirmouAfter = pessoa.confirmou_after ?? respostas.confirmou_after;
+
+  return (
+    <div className="space-y-4 border border-white/20 rounded-2xl p-4">
+      <p className="font-serif text-lg text-white">{pessoa.nome}</p>
+
+      {etapas.map((etapa) => {
+        const valorAtual = respostas[etapa.key] ?? pessoa[etapa.key] ?? undefined;
+        return (
+          <div
+            key={etapa.key}
+            className="flex items-center justify-between border border-neutral-200 rounded-xl px-4 py-3 bg-white/95 backdrop-blur-sm"
+          >
+            <span className="font-medium text-neutral-800">{etapa.label}</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleToggle(etapa.key, true)}
+                className={`px-3 py-1 rounded-full text-sm border transition ${
+                  valorAtual === true
+                    ? "bg-neutral-800 text-white border-neutral-800"
+                    : "border-neutral-300 text-neutral-600"
+                }`}
+              >
+                Vou
+              </button>
+              <button
+                onClick={() => handleToggle(etapa.key, false)}
+                className={`px-3 py-1 rounded-full text-sm border transition ${
+                  valorAtual === false
+                    ? "bg-neutral-800 text-white border-neutral-800"
+                    : "border-neutral-300 text-neutral-600"
+                }`}
+              >
+                Não vou
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+      {erro && <p className="text-red-300 text-sm">{erro}</p>}
+
+      {houveAlteracao && (
+        <button
+          onClick={handleSubmit}
+          disabled={salvando}
+          className="w-full py-2.5 rounded-full bg-neutral-800 text-white font-medium disabled:opacity-50"
+        >
+          {salvando ? "Salvando..." : "Confirmar"}
+        </button>
+      )}
+
+      {jaRespondeu && !houveAlteracao && (
+        <p className="text-sm text-neutral-200">Resposta registrada. Pode alterar quando quiser.</p>
+      )}
+
+      {confirmouAfter === true && <QrCodeAfter slug={pessoa.id} valor={pessoa.valor_after} />}
+    </div>
+  );
+}
+</file>
+
+<file path="supabase/functions/buscar-convite/index.ts">
+// Edge Function: buscar-convite
+// Recebe um texto digitado pelo convidado (ex: "alexia") e retorna o(s)
+// convite(s) cujo grupo tenha alguma pessoa com esse nome contendo o texto
+// buscado — comparação sem acento e sem diferenciar maiúscula/minúscula.
+//
+// Substitui a antiga get-convidado (que buscava por slug exato).
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function normalizar(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const { busca } = await req.json();
+
+    if (!busca || typeof busca !== "string" || normalizar(busca).length < 2) {
+      return new Response(JSON.stringify({ error: "Digite pelo menos 2 letras do nome" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const buscaNormalizada = normalizar(busca);
+
+    // Busca as pessoas cujo nome (sem acento, minúsculo) contém o texto buscado.
+    // A função buscar_convidados_por_nome (RPC) faz unaccent+lower no banco.
+    const { data: encontrados, error: rpcError } = await supabase.rpc("buscar_convidados_por_nome", {
+      termo: buscaNormalizada,
+    });
+
+    if (rpcError) {
+      return new Response(JSON.stringify({ error: "Erro ao buscar convidado" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const conviteIds = [...new Set((encontrados ?? []).map((r: { convite_id: string }) => r.convite_id))];
+
+    if (conviteIds.length === 0) {
+      return new Response(JSON.stringify({ error: "Não encontramos esse nome na lista de convidados" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Se o texto bater com mais de um convite (grupo) diferente, pedimos pra
+    // digitar um nome mais específico pra evitar ambiguidade.
+    if (conviteIds.length > 1) {
+      return new Response(
+        JSON.stringify({ error: "Encontramos mais de uma pessoa com esse nome. Digite o nome completo." }),
+        {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const conviteId = conviteIds[0];
+
+    const { data: convite, error: conviteError } = await supabase
+      .from("convites")
+      .select("id, nome_exibicao, perfil")
+      .eq("id", conviteId)
+      .single();
+
+    if (conviteError || !convite) {
+      return new Response(JSON.stringify({ error: "Convite não encontrado" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: pessoas, error: pessoasError } = await supabase
+      .from("convidados")
+      .select(
+        "id, nome, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
+      )
+      .eq("convite_id", conviteId)
+      .order("nome");
+
+    if (pessoasError) {
+      return new Response(JSON.stringify({ error: "Erro ao buscar convidados do grupo" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        convite: {
+          id: convite.id,
+          nome_exibicao: convite.nome_exibicao,
+          perfil: convite.perfil,
+          pessoas,
+        },
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  } catch (err) {
+    return new Response(JSON.stringify({ error: "Erro inesperado" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
+</file>
+
+<file path="supabase/migrations/0002_convites_por_grupo.sql">
+-- Convite de Casamento Laura & Gu
+-- Migração para o modelo "1 link único" (estilo i.casei):
+-- não existe mais slug individual. A busca é feita digitando o nome
+-- (texto normalizado: sem acento, minúsculo, "contém").
+--
+-- ATENÇÃO: este script derruba a tabela antiga "convidados" (baseada em slug).
+-- Só rode se ainda não há confirmações reais em produção que você precise preservar.
+-- Se já tiver dados reais, me avise antes de rodar — dá pra migrar em vez de derrubar.
+
+create extension if not exists unaccent;
+
+drop table if exists convidados cascade;
+
+create table convites (
+  id uuid primary key default gen_random_uuid(),
+  nome_exibicao text not null, -- ex: "Pedro e Aléxia" — só informativo/organização interna
+  perfil text not null check (perfil in ('cerimonia_festa_after', 'festa_after')),
+  criado_em timestamptz not null default now()
+);
+
+create table convidados (
+  id uuid primary key default gen_random_uuid(),
+  convite_id uuid not null references convites(id) on delete cascade,
+  nome text not null, -- ex: "Pedro Schuster" — é o que a pessoa digita pra se achar
+
+  confirmou_cerimonia boolean,
+  confirmou_festa boolean,
+  confirmou_after boolean,
+
+  status_pagamento_after text not null default 'nao_aplicavel'
+    check (status_pagamento_after in ('pendente', 'pago', 'nao_aplicavel')),
+
+  valor_after numeric(10,2),
+
+  respondido_em timestamptz
+);
+
+create index idx_convidados_convite_id on convidados (convite_id);
+
+-- Índice funcional para acelerar a busca por nome normalizado (sem acento, minúsculo)
+create index idx_convidados_nome_normalizado on convidados (lower(unaccent(nome)));
+
+-- RLS ligado, sem policies: client anon é bloqueado direto na tabela.
+-- Toda leitura/escrita passa pelas Edge Functions (service role key).
+alter table convites enable row level security;
+alter table convidados enable row level security;
+
+comment on table convites is 'Grupos convidados para o casamento Laura & Gu (ex: casal, família)';
+comment on table convidados is 'Pessoas dentro de cada convite — cada uma confirma presença individualmente. Acesso somente via Edge Functions, buscando por nome (contém, sem acento).';
+
+-- Função usada pela Edge Function buscar-convite: acha convidados cujo nome
+-- (sem acento, minúsculo) contém o termo buscado (já normalizado no client/edge).
+create or replace function buscar_convidados_por_nome(termo text)
+returns table (convite_id uuid)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select distinct c.convite_id
+  from convidados c
+  where lower(unaccent(c.nome)) ilike '%' || termo || '%';
+$$;
+</file>
 
 <file path="public/file.svg">
 <svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
@@ -105,158 +525,6 @@ This section contains the contents of the repository's files.
 
 <file path="public/window.svg">
 <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
-</file>
-
-<file path="src/app/convite/[slug]/convite-client.tsx">
-"use client";
-
-import { useState } from "react";
-import { confirmarPresenca, type Convidado } from "@/lib/supabase-functions";
-import QrCodeAfter from "@/components/qr-code-after";
-
-const ETAPAS_POR_PERFIL: Record<Convidado["perfil"], { key: EtapaKey; label: string }[]> = {
-  cerimonia_festa_after: [
-    { key: "confirmou_cerimonia", label: "Cerimônia" },
-    { key: "confirmou_festa", label: "Festa" },
-    { key: "confirmou_after", label: "After" },
-  ],
-  festa_after: [
-    { key: "confirmou_festa", label: "Festa" },
-    { key: "confirmou_after", label: "After" },
-  ],
-};
-
-type EtapaKey = "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after";
-
-export default function ConviteClient({ convidadoInicial }: { convidadoInicial: Convidado }) {
-  const [convidado, setConvidado] = useState(convidadoInicial);
-  const [respostas, setRespostas] = useState<Partial<Record<EtapaKey, boolean>>>({});
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-
-  const etapas = ETAPAS_POR_PERFIL[convidado.perfil];
-  const jaRespondeu = !!convidado.respondido_em;
-
-  function handleToggle(key: EtapaKey, value: boolean) {
-    setRespostas((prev) => ({ ...prev, [key]: value }));
-  }
-
-  async function handleSubmit() {
-    setSalvando(true);
-    setErro(null);
-    try {
-      const atualizado = await confirmarPresenca(convidado.slug, respostas);
-      setConvidado(atualizado);
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao salvar sua confirmação");
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  const todasEtapasRespondidas = etapas.every(
-    (etapa) => respostas[etapa.key] !== undefined || convidado[etapa.key] !== null
-  );
-
-  const confirmouAfter = convidado.confirmou_after ?? respostas.confirmou_after;
-
-  return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-[#faf7f2]">
-      <div className="max-w-md w-full space-y-8 text-center">
-        <div className="space-y-2">
-          <p className="text-sm tracking-widest uppercase text-neutral-500">Laura & Gu</p>
-          <h1 className="text-2xl font-serif text-neutral-800">Olá, {convidado.nome}!</h1>
-          <p className="text-neutral-600">
-            Confirme sua presença nas etapas abaixo para as quais você foi convidado(a).
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {etapas.map((etapa) => {
-            const valorAtual = respostas[etapa.key] ?? convidado[etapa.key] ?? undefined;
-            return (
-              <div
-                key={etapa.key}
-                className="flex items-center justify-between border border-neutral-200 rounded-xl px-4 py-3 bg-white"
-              >
-                <span className="font-medium text-neutral-800">{etapa.label}</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleToggle(etapa.key, true)}
-                    className={`px-3 py-1 rounded-full text-sm border transition ${
-                      valorAtual === true
-                        ? "bg-neutral-800 text-white border-neutral-800"
-                        : "border-neutral-300 text-neutral-600"
-                    }`}
-                  >
-                    Vou
-                  </button>
-                  <button
-                    onClick={() => handleToggle(etapa.key, false)}
-                    className={`px-3 py-1 rounded-full text-sm border transition ${
-                      valorAtual === false
-                        ? "bg-neutral-800 text-white border-neutral-800"
-                        : "border-neutral-300 text-neutral-600"
-                    }`}
-                  >
-                    Não vou
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {erro && <p className="text-red-600 text-sm">{erro}</p>}
-
-        {Object.keys(respostas).length > 0 && (
-          <button
-            onClick={handleSubmit}
-            disabled={salvando}
-            className="w-full py-3 rounded-full bg-neutral-800 text-white font-medium disabled:opacity-50"
-          >
-            {salvando ? "Salvando..." : "Confirmar presença"}
-          </button>
-        )}
-
-        {jaRespondeu && Object.keys(respostas).length === 0 && (
-          <p className="text-sm text-neutral-500">Sua resposta já foi registrada. Obrigado!</p>
-        )}
-
-        {confirmouAfter === true && (
-          <QrCodeAfter slug={convidado.slug} valor={convidado.valor_after} />
-        )}
-      </div>
-    </main>
-  );
-}
-</file>
-
-<file path="src/app/convite/[slug]/page.tsx">
-import { notFound } from "next/navigation";
-import { getConvidado } from "@/lib/supabase-functions";
-import ConviteClient from "./convite-client";
-
-export default async function ConvitePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-
-  let convidado;
-  try {
-    convidado = await getConvidado(slug);
-  } catch {
-    notFound();
-  }
-
-  if (!convidado) {
-    notFound();
-  }
-
-  return <ConviteClient convidadoInicial={convidado} />;
-}
 </file>
 
 <file path="src/app/globals.css">
@@ -307,73 +575,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 </file>
 
 <file path="src/app/page.tsx">
-import Image from "next/image";
+import BuscaConvite from "./busca-convite";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-neutral-900 bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: "url('/fundo-convite.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-black/50" />
+      <div className="relative max-w-md w-full">
+        <BuscaConvite />
+      </div>
+    </main>
   );
 }
 </file>
@@ -387,7 +601,7 @@ interface GerarPixQrCodeParams {
   nomeRecebedor: string;
   cidadeRecebedor: string;
   valor: number; // a lib exige um valor fixo por QR Code (Pix estático)
-  identificador?: string; // ex: slug do convidado, aparece como referência
+  identificador?: string; // ex: id da pessoa, aparece como referência
 }
 
 /**
@@ -426,16 +640,22 @@ export async function gerarPixQrCode({
 <file path="src/lib/supabase-functions.ts">
 export type Perfil = "cerimonia_festa_after" | "festa_after";
 
-export interface Convidado {
-  slug: string;
+export interface Pessoa {
+  id: string;
   nome: string;
-  perfil: Perfil;
   confirmou_cerimonia: boolean | null;
   confirmou_festa: boolean | null;
   confirmou_after: boolean | null;
   status_pagamento_after: "pendente" | "pago" | "nao_aplicavel";
   valor_after: number | null;
   respondido_em: string | null;
+}
+
+export interface Convite {
+  id: string;
+  nome_exibicao: string;
+  perfil: Perfil;
+  pessoas: Pessoa[];
 }
 
 const FUNCTIONS_URL = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL!;
@@ -460,17 +680,18 @@ async function callFunction<T>(name: string, body: Record<string, unknown>): Pro
   return data;
 }
 
-export async function getConvidado(slug: string) {
-  const { convidado } = await callFunction<{ convidado: Convidado }>("get-convidado", { slug });
-  return convidado;
+/** Busca o convite (grupo) a partir de um nome digitado pelo convidado. */
+export async function buscarConvite(busca: string) {
+  const { convite } = await callFunction<{ convite: Convite }>("buscar-convite", { busca });
+  return convite;
 }
 
 export async function confirmarPresenca(
-  slug: string,
-  confirmacoes: Partial<Pick<Convidado, "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after">>
+  convidadoId: string,
+  confirmacoes: Partial<Pick<Pessoa, "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after">>
 ) {
-  const { convidado } = await callFunction<{ convidado: Convidado }>("confirmar-presenca", {
-    slug,
+  const { convidado } = await callFunction<{ convidado: Pessoa }>("confirmar-presenca", {
+    convidado_id: convidadoId,
     ...confirmacoes,
   });
   return convidado;
@@ -479,8 +700,9 @@ export async function confirmarPresenca(
 
 <file path="supabase/functions/confirmar-presenca/index.ts">
 // Edge Function: confirmar-presenca
-// Atualiza a confirmação de presença de um convidado, validando que ele só
-// confirme etapas para as quais foi de fato convidado (com base no perfil).
+// Atualiza a confirmação de presença de UMA pessoa (convidado_id), validando
+// que ela só confirme etapas para as quais o convite (grupo) foi de fato
+// convidado, com base no perfil do convite.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -502,10 +724,10 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { slug, confirmou_cerimonia, confirmou_festa, confirmou_after } = await req.json();
+    const { convidado_id, confirmou_cerimonia, confirmou_festa, confirmou_after } = await req.json();
 
-    if (!slug || typeof slug !== "string") {
-      return new Response(JSON.stringify({ error: "slug é obrigatório" }), {
+    if (!convidado_id || typeof convidado_id !== "string") {
+      return new Response(JSON.stringify({ error: "convidado_id é obrigatório" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -516,11 +738,11 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Busca o convidado para saber o perfil e validar as etapas permitidas
+    // Busca a pessoa + o perfil do convite (grupo) ao qual ela pertence
     const { data: convidado, error: fetchError } = await supabase
       .from("convidados")
-      .select("id, perfil")
-      .eq("slug", slug)
+      .select("id, convite_id, convites(perfil)")
+      .eq("id", convidado_id)
       .single();
 
     if (fetchError || !convidado) {
@@ -530,10 +752,11 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const etapasPermitidas = ETAPAS_POR_PERFIL[convidado.perfil as Perfil];
+    const perfil = (convidado as unknown as { convites: { perfil: Perfil } }).convites.perfil;
+    const etapasPermitidas = ETAPAS_POR_PERFIL[perfil];
     const update: Record<string, unknown> = { respondido_em: new Date().toISOString() };
 
-    // Só grava o campo se a etapa for permitida para o perfil do convidado
+    // Só grava o campo se a etapa for permitida para o perfil do convite
     if (etapasPermitidas.includes("cerimonia") && typeof confirmou_cerimonia === "boolean") {
       update.confirmou_cerimonia = confirmou_cerimonia;
     }
@@ -549,9 +772,9 @@ Deno.serve(async (req: Request) => {
     const { data: updated, error: updateError } = await supabase
       .from("convidados")
       .update(update)
-      .eq("slug", slug)
+      .eq("id", convidado_id)
       .select(
-        "slug, nome, perfil, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
+        "id, nome, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
       )
       .single();
 
@@ -573,102 +796,6 @@ Deno.serve(async (req: Request) => {
     });
   }
 });
-</file>
-
-<file path="supabase/functions/get-convidado/index.ts">
-// Edge Function: get-convidado
-// Busca os dados de um convidado pelo slug. Usa a service role key
-// (RLS bloqueia o client anon, então essa function é o único caminho de leitura).
-
-import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
-    const { slug } = await req.json();
-
-    if (!slug || typeof slug !== "string") {
-      return new Response(JSON.stringify({ error: "slug é obrigatório" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    const { data, error } = await supabase
-      .from("convidados")
-      .select(
-        "slug, nome, perfil, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
-      )
-      .eq("slug", slug)
-      .single();
-
-    if (error || !data) {
-      return new Response(JSON.stringify({ error: "Convidado não encontrado" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ convidado: data }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: "Erro inesperado" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
-</file>
-
-<file path="supabase/migrations/0001_init.sql">
--- Convite de Casamento Laura & Gu
--- Tabela principal de convidados
-
-create table if not exists convidados (
-  id uuid primary key default gen_random_uuid(),
-  slug text unique not null,
-  nome text not null,
-  perfil text not null check (perfil in ('cerimonia_festa_after', 'festa_after')),
-
-  confirmou_cerimonia boolean,
-  confirmou_festa boolean,
-  confirmou_after boolean,
-
-  status_pagamento_after text not null default 'nao_aplicavel'
-    check (status_pagamento_after in ('pendente', 'pago', 'nao_aplicavel')),
-
-  valor_after numeric(10,2),
-
-  criado_em timestamptz not null default now(),
-  respondido_em timestamptz
-);
-
-create index if not exists idx_convidados_slug on convidados (slug);
-
--- RLS ligado: ninguém acessa direto pelo client.
--- Toda leitura/escrita passa pelas Edge Functions (service role key),
--- que validam o slug antes de expor ou alterar qualquer registro.
-alter table convidados enable row level security;
-
--- Nenhuma policy criada de propósito = client anon fica totalmente bloqueado.
--- As Edge Functions usam a service role key, que ignora RLS.
-
-comment on table convidados is 'Convidados do casamento Laura & Gu — acesso somente via Edge Functions por slug';
 </file>
 
 <file path=".gitignore">
@@ -876,21 +1003,32 @@ forçar outra coisa.
 </file>
 
 <file path="scripts/importar-convidados.mjs">
-// Importa convidados a partir de um CSV e gera o link individual de cada um.
+// Importa convites (grupos) e seus convidados (pessoas) a partir de um CSV.
 //
 // Formato esperado do CSV (com header), ex: convidados.csv
-//   nome,perfil
-//   João Silva,cerimonia_festa_after
-//   Maria Souza,festa_after
+//   grupo,nome_exibicao,nome,perfil
+//   1,Pedro e Aléxia,Pedro Schuster,cerimonia_festa_after
+//   1,Pedro e Aléxia,Aléxia Chaves,cerimonia_festa_after
+//   2,Gustavo,Gustavo,cerimonia_festa_after
+//   3,Laura,Laura,festa_after
+//
+// - "grupo": qualquer identificador (número ou texto) que agrupe as pessoas
+//   que recebem o mesmo convite/mensagem. Repetido em cada linha do grupo.
+// - "nome_exibicao": como o grupo é chamado na saudação da mensagem
+//   (ex: "Olá, Pedro e Aléxia!"). Repetido em cada linha do grupo.
+// - "nome": nome da pessoa, é o que ela vai digitar no site pra se achar.
+// - "perfil": cerimonia_festa_after | festa_after — igual pra todo o grupo.
 //
 // Uso:
-//   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... SITE_URL=https://convite-laura-gu.vercel.app \
+//   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... \
 //   node scripts/importar-convidados.mjs convidados.csv
 //
-// Gera convidados-links.csv com nome, slug e link pronto para disparo manual.
+// Não gera mais links individuais — o convite é o mesmo site pra todo mundo,
+// e cada grupo recebe apenas a mensagem personalizada por WhatsApp/e-mail,
+// sem link exclusivo (ex: "Olá, Pedro e Aléxia! Confirme em https://...").
 
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 const [, , csvPath] = process.argv;
 
@@ -901,7 +1039,6 @@ if (!csvPath) {
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SITE_URL = process.env.SITE_URL || "https://casamentogulau.vercel.app";
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   console.error("Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY nas variáveis de ambiente.");
@@ -909,25 +1046,6 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-
-function gerarSlug(nome, usados) {
-  const base = nome
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-");
-
-  let slug = base;
-  let contador = 2;
-  while (usados.has(slug)) {
-    slug = `${base}-${contador}`;
-    contador++;
-  }
-  usados.add(slug);
-  return slug;
-}
 
 function parseCsv(conteudo) {
   const linhas = conteudo.trim().split("\n");
@@ -941,13 +1059,13 @@ function parseCsv(conteudo) {
 async function main() {
   const conteudo = readFileSync(csvPath, "utf-8");
   const registros = parseCsv(conteudo);
-  const slugsUsados = new Set();
-  const resultado = [];
 
+  // Agrupa as linhas por "grupo"
+  const grupos = new Map();
   for (const registro of registros) {
-    const { nome, perfil } = registro;
+    const { grupo, nome_exibicao, nome, perfil } = registro;
 
-    if (!nome || !perfil) {
+    if (!grupo || !nome_exibicao || !nome || !perfil) {
       console.warn("Linha inválida, pulando:", registro);
       continue;
     }
@@ -956,25 +1074,41 @@ async function main() {
       continue;
     }
 
-    const slug = gerarSlug(nome, slugsUsados);
+    if (!grupos.has(grupo)) {
+      grupos.set(grupo, { nome_exibicao, perfil, pessoas: [] });
+    }
+    grupos.get(grupo).pessoas.push(nome);
+  }
 
-    const { error } = await supabase.from("convidados").insert({ nome, perfil, slug });
+  let totalConvites = 0;
+  let totalPessoas = 0;
 
-    if (error) {
-      console.error(`Erro ao inserir "${nome}":`, error.message);
+  for (const [grupo, dados] of grupos) {
+    const { data: convite, error: conviteError } = await supabase
+      .from("convites")
+      .insert({ nome_exibicao: dados.nome_exibicao, perfil: dados.perfil })
+      .select("id")
+      .single();
+
+    if (conviteError || !convite) {
+      console.error(`Erro ao criar convite do grupo "${grupo}":`, conviteError?.message);
       continue;
     }
 
-    resultado.push({ nome, slug, link: `${SITE_URL}/convite/${slug}` });
+    const { error: pessoasError } = await supabase
+      .from("convidados")
+      .insert(dados.pessoas.map((nome) => ({ convite_id: convite.id, nome })));
+
+    if (pessoasError) {
+      console.error(`Erro ao inserir pessoas do grupo "${grupo}":`, pessoasError.message);
+      continue;
+    }
+
+    totalConvites++;
+    totalPessoas += dados.pessoas.length;
   }
 
-  const csvSaida = [
-    "nome,slug,link",
-    ...resultado.map((r) => `${r.nome},${r.slug},${r.link}`),
-  ].join("\n");
-
-  writeFileSync("convidados-links.csv", csvSaida, "utf-8");
-  console.log(`\n${resultado.length} convidados importados. Links salvos em convidados-links.csv`);
+  console.log(`\n${totalConvites} convites (grupos) importados, com ${totalPessoas} pessoas no total.`);
 }
 
 main();
@@ -993,7 +1127,7 @@ const PIX_CONFIG = {
   cidadeRecebedor: process.env.NEXT_PUBLIC_PIX_CIDADE || "PORTO ALEGRE",
 };
 
-// Valor padrão do after, usado caso o convidado não tenha um valor específico no banco.
+// Valor padrão do after, usado caso a pessoa não tenha um valor específico no banco.
 const VALOR_AFTER_PADRAO = Number(process.env.NEXT_PUBLIC_VALOR_AFTER_PADRAO || "0");
 
 export default function QrCodeAfter({ slug, valor }: { slug: string; valor: number | null }) {
@@ -1017,7 +1151,7 @@ export default function QrCodeAfter({ slug, valor }: { slug: string; valor: numb
   }, [slug, valorFinal]);
 
   return (
-    <div className="border border-neutral-200 rounded-xl p-6 bg-white space-y-3">
+    <div className="border border-neutral-200 rounded-xl p-4 bg-white space-y-3">
       <p className="font-medium text-neutral-800">Pagamento do After</p>
       <p className="text-sm text-neutral-600">
         Escaneie o QR Code abaixo para pagar via Pix
@@ -1026,7 +1160,7 @@ export default function QrCodeAfter({ slug, valor }: { slug: string; valor: numb
       {erro && <p className="text-red-600 text-sm">{erro}</p>}
       {qrCodeDataUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={qrCodeDataUrl} alt="QR Code Pix" className="mx-auto w-56 h-56" />
+        <img src={qrCodeDataUrl} alt="QR Code Pix" className="mx-auto w-48 h-48" />
       )}
     </div>
   );

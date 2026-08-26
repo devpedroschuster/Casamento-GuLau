@@ -1,6 +1,7 @@
 // Edge Function: confirmar-presenca
-// Atualiza a confirmação de presença de um convidado, validando que ele só
-// confirme etapas para as quais foi de fato convidado (com base no perfil).
+// Atualiza a confirmação de presença de UMA pessoa (convidado_id), validando
+// que ela só confirme etapas para as quais o convite (grupo) foi de fato
+// convidado, com base no perfil do convite.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -22,10 +23,10 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { slug, confirmou_cerimonia, confirmou_festa, confirmou_after } = await req.json();
+    const { convidado_id, confirmou_cerimonia, confirmou_festa, confirmou_after } = await req.json();
 
-    if (!slug || typeof slug !== "string") {
-      return new Response(JSON.stringify({ error: "slug é obrigatório" }), {
+    if (!convidado_id || typeof convidado_id !== "string") {
+      return new Response(JSON.stringify({ error: "convidado_id é obrigatório" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -36,11 +37,11 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Busca o convidado para saber o perfil e validar as etapas permitidas
+    // Busca a pessoa + o perfil do convite (grupo) ao qual ela pertence
     const { data: convidado, error: fetchError } = await supabase
       .from("convidados")
-      .select("id, perfil")
-      .eq("slug", slug)
+      .select("id, convite_id, convites(perfil)")
+      .eq("id", convidado_id)
       .single();
 
     if (fetchError || !convidado) {
@@ -50,10 +51,11 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const etapasPermitidas = ETAPAS_POR_PERFIL[convidado.perfil as Perfil];
+    const perfil = (convidado as unknown as { convites: { perfil: Perfil } }).convites.perfil;
+    const etapasPermitidas = ETAPAS_POR_PERFIL[perfil];
     const update: Record<string, unknown> = { respondido_em: new Date().toISOString() };
 
-    // Só grava o campo se a etapa for permitida para o perfil do convidado
+    // Só grava o campo se a etapa for permitida para o perfil do convite
     if (etapasPermitidas.includes("cerimonia") && typeof confirmou_cerimonia === "boolean") {
       update.confirmou_cerimonia = confirmou_cerimonia;
     }
@@ -69,9 +71,9 @@ Deno.serve(async (req: Request) => {
     const { data: updated, error: updateError } = await supabase
       .from("convidados")
       .update(update)
-      .eq("slug", slug)
+      .eq("id", convidado_id)
       .select(
-        "slug, nome, perfil, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
+        "id, nome, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
       )
       .single();
 

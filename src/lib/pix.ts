@@ -6,7 +6,7 @@ interface GerarPixQrCodeParams {
   nomeRecebedor: string;
   cidadeRecebedor: string;
   valor: number; // a lib exige um valor fixo por QR Code (Pix estático)
-  identificador?: string; // ex: slug do convidado, aparece como referência
+  identificador?: string; // ex: id da pessoa, aparece como referência
 }
 
 /**
