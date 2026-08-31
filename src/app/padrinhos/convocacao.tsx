@@ -1,0 +1,556 @@
+"use client";
+
+import Image from "next/image";
+import { useEffect, useRef } from "react";
+
+const WHATSAPP = "5551999714595";
+const MENSAGEM = "Aceito a convocação. Terno risca de giz, anotado.";
+
+const ENDERECO = "Quintal dos Belgas, Estr. Fazenda Conceição, 605b, Morungava, Gravataí - RS";
+
+const MAPA = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ENDERECO)}`;
+
+const AGENDA =
+  "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+  "&text=" +
+  encodeURIComponent("Casamento de Laura e Gustavo") +
+  "&dates=20261128/20261129" +
+  "&location=" +
+  encodeURIComponent(ENDERECO) +
+  "&details=" +
+  encodeURIComponent(
+    "Terno completo preto risca de giz, camisa branca, gravata preta, sapato social preto."
+  );
+
+const ACEITE = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(MENSAGEM)}`;
+
+const UNIFORME = [
+  { rotulo: "Traje", valor: "Terno completo, três peças" },
+  { rotulo: "Cor", valor: "Preto risca de giz", amostra: true },
+  { rotulo: "Camisa", valor: "Branca" },
+  { rotulo: "Gravata", valor: "Preta" },
+  { rotulo: "Sapato", valor: "Social preto" },
+];
+
+const PLACAS = [
+  {
+    src: "/padrinhos/traje-1.jpg",
+    alt: "Terno preto risca de giz de três peças, com colete, camisa branca e gravata preta",
+  },
+  { src: "/padrinhos/traje-2.jpg", alt: "Terno risca de giz com colete e lenço no bolso" },
+  { src: "/padrinhos/traje-3.jpg", alt: "Terno preto risca de giz com gravata preta e camisa branca" },
+];
+
+const CORES = ["236,214,164", "212,220,232", "255,249,232", "201,162,93"];
+
+/** Sprite da estrela de quatro pontas, desenhado uma única vez por cor. */
+function criarSprite(cor: string) {
+  const S = 96;
+  const meio = S / 2;
+  const r = S / 7;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  const g = c.getContext("2d");
+  if (!g) return c;
+
+  const halo = g.createRadialGradient(meio, meio, 0, meio, meio, meio);
+  halo.addColorStop(0, `rgba(${cor},.95)`);
+  halo.addColorStop(0.14, `rgba(${cor},.42)`);
+  halo.addColorStop(0.42, `rgba(${cor},.10)`);
+  halo.addColorStop(1, `rgba(${cor},0)`);
+  g.fillStyle = halo;
+  g.fillRect(0, 0, S, S);
+
+  const ponta = r * 4.4;
+  const cintura = r * 0.42;
+  g.fillStyle = `rgba(${cor},1)`;
+  g.beginPath();
+  g.moveTo(meio, meio - ponta);
+  g.quadraticCurveTo(meio + cintura, meio - cintura, meio + ponta, meio);
+  g.quadraticCurveTo(meio + cintura, meio + cintura, meio, meio + ponta);
+  g.quadraticCurveTo(meio - cintura, meio + cintura, meio - ponta, meio);
+  g.quadraticCurveTo(meio - cintura, meio - cintura, meio, meio - ponta);
+  g.fill();
+
+  // núcleo branco: é o que faz a estrela parecer acesa, e não desenhada
+  const nucleo = g.createRadialGradient(meio, meio, 0, meio, meio, r * 1.15);
+  nucleo.addColorStop(0, "rgba(255,255,255,1)");
+  nucleo.addColorStop(0.5, "rgba(255,252,242,.8)");
+  nucleo.addColorStop(1, "rgba(255,252,242,0)");
+  g.fillStyle = nucleo;
+  g.beginPath();
+  g.arc(meio, meio, r * 1.15, 0, Math.PI * 2);
+  g.fill();
+
+  return c;
+}
+
+type Estrela = {
+  x: number;
+  y: number;
+  t: number;
+  s: number;
+  fase: number;
+  vel: number;
+  deriva: number;
+};
+
+type Poeira = { x: number; y: number; r: number; cor: string; fase: number; vel: number };
+
+export default function Convocacao() {
+  const portaoRef = useRef<HTMLDivElement>(null);
+  const docRef = useRef<HTMLElement>(null);
+  const botaoRef = useRef<HTMLButtonElement>(null);
+  const brilhoRef = useRef<HTMLCanvasElement>(null);
+  const poeiraRef = useRef<HTMLCanvasElement>(null);
+  const marcaRef = useRef<SVGSVGElement>(null);
+  const palavraRef = useRef<SVGTextElement>(null);
+
+  const abertoRef = useRef(false);
+  const fontesProntasRef = useRef(false);
+  const palavraAjustadaRef = useRef(false);
+
+  /* A palavra sob medida: com a fonte carregada, largamos a largura forçada e
+     encaixamos o viewBox no texto real. Sem isso os glifos ficam espremidos
+     (8% em Bodoni, 14% se a fonte não tiver chegado) e as letras parecem
+     cortadas. Só dá para medir com o documento já visível: enquanto ele está
+     display:none, getComputedTextLength devolve 0. */
+  const ajustarPalavra = useRef(() => {});
+
+  useEffect(() => {
+    ajustarPalavra.current = () => {
+      const svg = marcaRef.current;
+      const texto = palavraRef.current;
+      if (palavraAjustadaRef.current || !fontesProntasRef.current) return;
+      if (!svg || !texto || !svg.getClientRects().length) return;
+
+      texto.removeAttribute("textLength");
+      texto.removeAttribute("lengthAdjust");
+
+      const largura = texto.getComputedTextLength();
+      if (!largura || !isFinite(largura)) {
+        texto.setAttribute("textLength", "1081");
+        texto.setAttribute("lengthAdjust", "spacingAndGlyphs");
+        return;
+      }
+
+      svg.setAttribute("viewBox", `0 0 ${largura} 126`);
+      svg.style.aspectRatio = `${largura} / 126`;
+      palavraAjustadaRef.current = true;
+    };
+
+    let cancelado = false;
+    const marcarFontes = () => {
+      if (cancelado) return;
+      fontesProntasRef.current = true;
+      ajustarPalavra.current();
+    };
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(marcarFontes);
+    } else {
+      addEventListener("load", marcarFontes);
+    }
+
+    return () => {
+      cancelado = true;
+      removeEventListener("load", marcarFontes);
+    };
+  }, []);
+
+  /* Céu estrelado. Cada cor é desenhada uma única vez num sprite fora da tela;
+     o loop só reposiciona e muda a opacidade, o que mantém a densidade alta
+     sem pesar no celular. */
+  useEffect(() => {
+    const cv = brilhoRef.current;
+    const ctx = cv?.getContext("2d");
+    if (!cv || !ctx) return;
+
+    const sprites = CORES.map(criarSprite);
+    let estrelas: Estrela[] = [];
+    let poeirinha: Poeira[] = [];
+    let quadro = 0;
+
+    const dimensionar = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = innerWidth * dpr;
+      cv.height = innerHeight * dpr;
+      cv.style.width = `${innerWidth}px`;
+      cv.style.height = `${innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const area = innerWidth * innerHeight;
+
+      estrelas = [];
+      const n = Math.min(Math.round(area / 9000), 260);
+      for (let i = 0; i < n; i++) {
+        estrelas.push({
+          x: Math.random() * innerWidth,
+          y: Math.random() * innerHeight,
+          // poucas grandes, muitas pequenas
+          t: 8 + Math.pow(Math.random(), 2.6) * 40,
+          s: (Math.random() * CORES.length) | 0,
+          fase: Math.random() * Math.PI * 2,
+          vel: 0.55 + Math.random() * 1.5,
+          deriva: 0.02 + Math.random() * 0.09,
+        });
+      }
+
+      poeirinha = [];
+      const m = Math.min(Math.round(area / 4200), 520);
+      for (let j = 0; j < m; j++) {
+        poeirinha.push({
+          x: Math.random() * innerWidth,
+          y: Math.random() * innerHeight,
+          r: Math.random() * 1.1 + 0.35,
+          cor: CORES[(Math.random() * CORES.length) | 0],
+          fase: Math.random() * Math.PI * 2,
+          vel: 0.7 + Math.random() * 2.1,
+        });
+      }
+    };
+
+    const pintar = (t: number) => {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      const s = t / 1000;
+
+      for (const d of poeirinha) {
+        const a = 0.12 + 0.78 * Math.pow(0.5 + 0.5 * Math.sin(s * d.vel + d.fase), 2);
+        ctx.fillStyle = `rgba(${d.cor},${a.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (const e of estrelas) {
+        // expoente alto = a estrela apaga de vez e reacende, em vez de pulsar
+        const a = 0.1 + 0.9 * Math.pow(0.5 + 0.5 * Math.sin(s * e.vel + e.fase), 1.9);
+        if (a < 0.02) continue;
+        const tam = e.t * (0.72 + 0.28 * a);
+        e.y -= e.deriva;
+        if (e.y < -tam) e.y = innerHeight + tam;
+        ctx.globalAlpha = a;
+        ctx.drawImage(sprites[e.s], e.x - tam / 2, e.y - tam / 2, tam, tam);
+      }
+      ctx.globalAlpha = 1;
+
+      quadro = requestAnimationFrame(pintar);
+    };
+
+    dimensionar();
+    addEventListener("resize", dimensionar);
+    quadro = requestAnimationFrame(pintar);
+
+    return () => {
+      cancelAnimationFrame(quadro);
+      removeEventListener("resize", dimensionar);
+    };
+  }, []);
+
+  const estourar = (cx: number, cy: number) => {
+    const pc = poeiraRef.current;
+    const pctx = pc?.getContext("2d");
+    if (!pc || !pctx) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    pc.width = innerWidth * dpr;
+    pc.height = innerHeight * dpr;
+    pc.style.width = `${innerWidth}px`;
+    pc.style.height = `${innerHeight}px`;
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const fagulhas = Array.from({ length: 90 }, () => {
+      const ang = Math.random() * Math.PI * 2;
+      const v = 1.6 + Math.random() * 6.4;
+      return {
+        x: cx,
+        y: cy,
+        vx: Math.cos(ang) * v,
+        vy: Math.sin(ang) * v - 1.6,
+        r: Math.random() * 2 + 0.6,
+        cor: CORES[(Math.random() * CORES.length) | 0],
+        vida: 1,
+      };
+    });
+
+    const passo = () => {
+      pctx.clearRect(0, 0, innerWidth, innerHeight);
+      let vivas = 0;
+      for (const f of fagulhas) {
+        if (f.vida <= 0) continue;
+        vivas++;
+        f.x += f.vx;
+        f.y += f.vy;
+        f.vy += 0.14;
+        f.vx *= 0.985;
+        f.vida -= 0.011;
+        pctx.beginPath();
+        pctx.fillStyle = `rgba(${f.cor},${Math.max(f.vida, 0).toFixed(3)})`;
+        pctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        pctx.fill();
+      }
+      if (vivas) requestAnimationFrame(passo);
+      else pctx.clearRect(0, 0, innerWidth, innerHeight);
+    };
+
+    requestAnimationFrame(passo);
+  };
+
+  /* A abertura em quatro tempos: a cera cede e racha → as metades se soltam →
+     a câmera atravessa a fenda → o documento assenta do outro lado.
+     A pedido do casal, roda para todo mundo: esta página é um convite fechado
+     entregue a um punhado de padrinhos, e a abertura é o presente. */
+  const revelar = () => {
+    const portao = portaoRef.current;
+    const doc = docRef.current;
+    const botao = botaoRef.current;
+    if (abertoRef.current || !portao || !doc || !botao) return;
+    abertoRef.current = true;
+
+    const partes = doc.querySelectorAll<HTMLElement>(".surge");
+
+    portao.classList.add("pressionado");
+
+    setTimeout(() => {
+      const r = botao.getBoundingClientRect();
+      estourar(r.left + r.width / 2, r.top + r.height / 2);
+      portao.classList.add("rompido");
+    }, 430);
+
+    setTimeout(() => portao.classList.add("atravessando"), 760);
+
+    setTimeout(() => {
+      doc.hidden = false;
+      ajustarPalavra.current(); // agora o SVG tem layout e pode ser medido
+      doc.classList.add("chegando");
+      // reflow forçado em vez de requestAnimationFrame: rAF não roda em aba
+      // oculta, e o documento ficaria preso em opacidade 0
+      void doc.offsetWidth;
+      doc.classList.add("assentando");
+    }, 1020);
+
+    setTimeout(() => {
+      partes[0]?.classList.add("visivel");
+      partes[1]?.classList.add("visivel");
+    }, 1500);
+
+    const obs = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          if (e.isIntersecting) {
+            e.target.classList.add("visivel");
+            obs.unobserve(e.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px" }
+    );
+    partes.forEach((el, i) => {
+      if (i >= 2) obs.observe(el);
+    });
+
+    setTimeout(() => portao.classList.add("saindo"), 1750);
+    setTimeout(() => portao.remove(), 3000);
+
+    // Rede de segurança: se a transição não chegar a rodar — aba oculta, o
+    // navegador engasgando —, o documento tem de terminar visível de todo
+    // jeito. Sem "chegando", sobra só o estado final.
+    setTimeout(() => {
+      doc.classList.remove("chegando");
+      if (parseFloat(getComputedStyle(doc).opacity) < 0.98) {
+        doc.style.transition = "none";
+        doc.style.opacity = "1";
+        doc.style.transform = "none";
+        doc.style.filter = "none";
+      }
+    }, 2800);
+  };
+
+  return (
+    <div className="convocacao">
+      <div className="pd-fundo" aria-hidden="true" />
+      <div className="lustre" aria-hidden="true" />
+      <canvas className="brilho" ref={brilhoRef} aria-hidden="true" />
+
+      <div className="portao" ref={portaoRef}>
+        <p className="micro rotulo-topo">Comunicado reservado</p>
+        <div className="zoom">
+          <button
+            type="button"
+            className="lacre-btn"
+            ref={botaoRef}
+            onClick={revelar}
+            aria-label="Romper o lacre e abrir a convocação"
+          >
+            <span className="lacre" aria-hidden="true">
+              <span className="metade esq">
+                <span className="cera">
+                  <span className="monograma">
+                    L<i />G
+                  </span>
+                </span>
+              </span>
+              <span className="metade dir">
+                <span className="cera">
+                  <span className="monograma">
+                    L<i />G
+                  </span>
+                </span>
+              </span>
+              <span className="rachadura" />
+            </span>
+          </button>
+        </div>
+        <p className="micro frio rotulo-base">toque para romper o lacre</p>
+      </div>
+      <canvas className="poeira" ref={poeiraRef} aria-hidden="true" />
+
+      <main className="doc" ref={docRef} hidden>
+        <article className="cartao">
+          <b />
+          <b />
+          <b />
+          <b />
+
+          <header className="cabecalho surge">
+            <p className="micro">Comunicado oficial &middot; Laura &amp; Gustavo</p>
+            <p className="negacao">Você não foi convidado. Mas sim,</p>
+            <h1 className="visualmente-oculto">Convocados</h1>
+            <svg
+              className="marca"
+              ref={marcaRef}
+              viewBox="0 0 1081 126"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <defs>
+                <linearGradient id="pd-ouro" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stopColor="#c9a25d" />
+                  <stop offset=".30" stopColor="#c9a25d" />
+                  <stop offset=".44" stopColor="#fff5dd" />
+                  <stop offset=".54" stopColor="#ecd6a4" />
+                  <stop offset=".68" stopColor="#c9a25d" />
+                  <stop offset="1" stopColor="#c9a25d" />
+                  <animateTransform
+                    attributeName="gradientTransform"
+                    type="translate"
+                    values="-1.1 0; 1.1 0; 1.1 0"
+                    keyTimes="0; .40; 1"
+                    dur="7s"
+                    begin="1.2s"
+                    repeatCount="indefinite"
+                  />
+                </linearGradient>
+              </defs>
+              <text
+                ref={palavraRef}
+                x="0"
+                y="112"
+                fontSize="150"
+                textLength="1081"
+                lengthAdjust="spacingAndGlyphs"
+              >
+                CONVOCADO
+              </text>
+            </svg>
+            <hr className="fio" />
+          </header>
+
+          <section className="voz surge">
+            <p>
+              Ser nosso padrinho vai muito além de estar ao nosso lado no altar. É estar presente na
+              nossa caminhada, celebrar nossas conquistas, apoiar nos momentos difíceis e, acima de
+              tudo, compartilhar conosco a alegria de construir uma vida juntos.
+            </p>
+            <p className="assinatura">E queremos viver esse dia com vocês.</p>
+          </section>
+
+          <section className="bloco surge">
+            <p className="micro">O uniforme</p>
+            <div className="uniforme">
+              <dl className="ficha">
+                {UNIFORME.map((item) => (
+                  <Fragmento key={item.rotulo} {...item} />
+                ))}
+              </dl>
+              <div className="placas">
+                {PLACAS.map((p) => (
+                  <figure className="placa" key={p.src}>
+                    {/* priority, e não lazy: o documento nasce escondido atrás
+                        do lacre, e imagem preguiçosa dentro de display:none só
+                        começaria a baixar depois que o padrinho rolasse até
+                        ela. São 52 KB no total — melhor já estarem prontas. */}
+                    <Image
+                      src={p.src}
+                      alt={p.alt}
+                      fill
+                      priority
+                      sizes="(min-width: 62rem) 22rem, 60vw"
+                    />
+                  </figure>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="data bloco surge">
+            <p className="micro">Data e local</p>
+            <p className="numerais">
+              28 <span>·</span> 11 <span>·</span> 2026
+            </p>
+            <p className="micro frio">Sábado</p>
+            <p className="local">Quintal dos Belgas</p>
+            <p className="endereco">
+              Estr. Fazenda Conceição, 605b — Morungava
+              <br />
+              Gravataí, RS
+            </p>
+            <div className="acoes">
+              <a className="btn-fio" href={MAPA} target="_blank" rel="noopener">
+                Ver no mapa
+              </a>
+              <a className="btn-fio" href={AGENDA} target="_blank" rel="noopener">
+                Salvar na agenda
+              </a>
+            </div>
+          </section>
+
+          <hr className="fio surge" />
+
+          <section className="aceite surge">
+            <p className="obs">Recusar não é uma opção prevista neste comunicado.</p>
+            <a className="btn-ouro" href={ACEITE} target="_blank" rel="noopener">
+              Aceito a convocação
+            </a>
+          </section>
+
+          <footer className="rodape surge">
+            <span className="lg">L&nbsp;|&nbsp;G</span>
+            <p></p>
+          </footer>
+        </article>
+      </main>
+    </div>
+  );
+}
+
+/** Uma linha da ficha técnica: rótulo e valor, com a amostra de tecido na cor. */
+function Fragmento({
+  rotulo,
+  valor,
+  amostra,
+}: {
+  rotulo: string;
+  valor: string;
+  amostra?: boolean;
+}) {
+  return (
+    <>
+      <dt>{rotulo}</dt>
+      <dd>
+        {amostra && <span className="amostra" aria-hidden="true" />}
+        {valor}
+      </dd>
+    </>
+  );
+}

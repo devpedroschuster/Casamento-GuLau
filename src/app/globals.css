@@ -1,26 +1,160 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --onyx: #120f14;
+  --onyx-2: #1e1720;
+  --champagne: #c9a25d;
+  --champagne-light: #ecd6a4;
+  --rose-gold: #d9a9a0;
+  --rose-gold-light: #f1d9c9;
+  --platinum: #c7cdd6;
+  --ivory: #f6f1e8;
+
+  --background: var(--onyx);
+  --foreground: var(--ivory);
+
+  --font-display: var(--font-cormorant);
+  --font-sans: var(--font-manrope);
 }
 
 @theme inline {
+  --color-onyx: var(--onyx);
+  --color-onyx-2: var(--onyx-2);
+  --color-champagne: var(--champagne);
+  --color-champagne-light: var(--champagne-light);
+  --color-rose-gold: var(--rose-gold);
+  --color-rose-gold-light: var(--rose-gold-light);
+  --color-platinum: var(--platinum);
+  --color-ivory: var(--ivory);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--background);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), sans-serif;
+  position: relative;
+}
+
+/* Brilho — camada fixa, atrás do conteúdo mas acima do fundo, com pontos grandes o bastante pra aparecer de verdade */
+.glitter-field {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(3px 3px at 6% 12%, rgba(236, 214, 164, 1), transparent 70%),
+    radial-gradient(2.5px 2.5px at 18% 32%, rgba(199, 205, 214, .95), transparent 70%),
+    radial-gradient(3.5px 3.5px at 30% 8%, rgba(217, 169, 160, 1), transparent 70%),
+    radial-gradient(2px 2px at 44% 60%, rgba(236, 214, 164, .9), transparent 70%),
+    radial-gradient(3px 3px at 58% 22%, rgba(199, 205, 214, 1), transparent 70%),
+    radial-gradient(2.5px 2.5px at 68% 45%, rgba(217, 169, 160, .95), transparent 70%),
+    radial-gradient(3.5px 3.5px at 78% 15%, rgba(236, 214, 164, 1), transparent 70%),
+    radial-gradient(2px 2px at 88% 55%, rgba(199, 205, 214, .9), transparent 70%),
+    radial-gradient(3px 3px at 10% 70%, rgba(217, 169, 160, 1), transparent 70%),
+    radial-gradient(2.5px 2.5px at 25% 85%, rgba(236, 214, 164, .9), transparent 70%),
+    radial-gradient(3.5px 3.5px at 40% 92%, rgba(199, 205, 214, 1), transparent 70%),
+    radial-gradient(2px 2px at 55% 78%, rgba(217, 169, 160, .9), transparent 70%),
+    radial-gradient(3px 3px at 70% 88%, rgba(236, 214, 164, 1), transparent 70%),
+    radial-gradient(2.5px 2.5px at 92% 80%, rgba(199, 205, 214, .95), transparent 70%),
+    radial-gradient(3px 3px at 95% 35%, rgba(217, 169, 160, 1), transparent 70%),
+    radial-gradient(2px 2px at 50% 40%, rgba(236, 214, 164, .9), transparent 70%),
+    radial-gradient(2.5px 2.5px at 15% 50%, rgba(199, 205, 214, .9), transparent 70%),
+    radial-gradient(3px 3px at 82% 65%, rgba(217, 169, 160, 1), transparent 70%);
+  filter: drop-shadow(0 0 3px rgba(236, 214, 164, .5));
+  animation: cintilar 3.2s ease-in-out infinite;
+}
+
+.glitter-field.camada-2 {
+  animation-duration: 4.6s;
+  animation-delay: .8s;
+  transform: translateY(120px);
+}
+
+@keyframes cintilar {
+  0%, 100% { opacity: .35; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glitter-field { animation: none; opacity: .7; }
+}
+
+.secao {
+  position: relative;
+  z-index: 1;
+}
+
+/* Washes de cor por seção — dá variação de tom ao longo do scroll sem perder a base metalizada */
+.fundo-champagne {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201, 162, 93, 0.14), transparent 65%);
+}
+
+.fundo-rose {
+  background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(217, 169, 160, 0.13), transparent 65%);
+}
+
+.fundo-platinum {
+  background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(199, 205, 214, 0.09), transparent 65%);
+}
+
+/* Moldura facetada — agora translúcida, deixa o brilho de fundo aparecer por trás dos cards */
+.moldura {
+  position: relative;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(rgba(30, 23, 32, 0.82), rgba(30, 23, 32, 0.82)),
+    linear-gradient(135deg, var(--champagne-light), var(--rose-gold) 45%, var(--platinum) 75%, var(--champagne));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+}
+
+.moldura::before,
+.moldura::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, var(--champagne-light), var(--rose-gold));
+  transform: rotate(45deg);
+  top: -5px;
+  filter: drop-shadow(0 0 4px rgba(236, 214, 164, .6));
+}
+
+.moldura::before { left: -5px; }
+.moldura::after { right: -5px; }
+
+.eyebrow-metal {
+  background: linear-gradient(90deg, var(--platinum), var(--champagne-light), var(--rose-gold-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-metal {
+  background: linear-gradient(135deg, var(--champagne-light), var(--champagne) 55%, var(--rose-gold));
+  color: var(--onyx);
+  font-weight: 600;
+  box-shadow: 0 0 20px -6px rgba(201, 162, 93, .7);
+}
+
+.btn-metal:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.linha-metal {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--champagne), var(--rose-gold), transparent);
+  border: none;
 }

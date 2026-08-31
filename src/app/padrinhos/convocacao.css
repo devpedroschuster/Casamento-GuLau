@@ -1,0 +1,816 @@
+/* Convocação dos padrinhos — página reservada, fora da navegação do site.
+   Tudo aqui vive sob .convocacao para não vazar nas classes de globals.css
+   (o cartão se chama .cartao justamente porque .moldura já existe lá). */
+
+.convocacao {
+  --ink: var(--ivory);
+  --ink-2: #a8adb6;
+
+  --f-display: var(--font-bodoni), var(--font-cormorant), Georgia, serif;
+  --f-voice: var(--font-cormorant), Georgia, serif;
+  --f-util: var(--font-manrope), system-ui, -apple-system, sans-serif;
+
+  --col: 34rem;
+
+  position: relative;
+  min-height: 100vh;
+  overflow-x: clip;
+  color: var(--ink);
+  font-family: var(--f-util);
+  font-weight: 300;
+}
+
+.convocacao ::selection {
+  background: rgba(201, 162, 93, 0.3);
+  color: var(--ivory);
+}
+
+.convocacao :where(a, button):focus-visible {
+  outline: 1px solid var(--champagne-light);
+  outline-offset: 4px;
+}
+
+.convocacao .visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Fundo próprio ────────────────────────────────────────────────────────
+   Vem depois do .glitter-field do layout raiz no DOM e com o mesmo z-index,
+   então o cobre: esta página tem o céu dela, não o do site. */
+.convocacao .pd-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--onyx);
+}
+
+/* O .pd-fundo já esconde o glitter do site; isto só evita animá-lo à toa
+   atrás de uma camada opaca. Onde :has não existir, nada muda visualmente. */
+body:has(.convocacao) .glitter-field {
+  display: none;
+}
+
+/* ── Atmosfera: o lustre ─────────────────────────────────────────────────── */
+.convocacao .lustre {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 78vh;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% -8%, rgba(236, 214, 164, 0.2), transparent 62%),
+    radial-gradient(ellipse 120% 70% at 50% -20%, rgba(201, 162, 93, 0.1), transparent 70%);
+}
+
+.convocacao .lustre::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -12vh;
+  width: 62vw;
+  height: 70vh;
+  transform: translateX(-50%);
+  background: conic-gradient(
+    from 200deg at 50% 0%,
+    transparent 0deg,
+    rgba(236, 214, 164, 0.075) 30deg,
+    transparent 60deg,
+    transparent 120deg,
+    rgba(236, 214, 164, 0.055) 150deg,
+    transparent 180deg
+  );
+  filter: blur(14px);
+  animation: pd-oscilar 9s ease-in-out infinite;
+}
+
+@keyframes pd-oscilar {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.convocacao .brilho {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ── O lacre ─────────────────────────────────────────────────────────────── */
+.convocacao .portao {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-content: center;
+  place-items: center;
+  padding: 2rem;
+  overflow: hidden;
+  /* só um véu: as estrelas continuam visíveis por trás do lacre */
+  background: radial-gradient(
+    ellipse 75% 55% at 50% 52%,
+    rgba(18, 15, 20, 0.5),
+    rgba(18, 15, 20, 0.86) 82%
+  );
+  transition:
+    opacity 0.95s ease,
+    visibility 0.95s ease;
+}
+
+.convocacao .portao.saindo {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.convocacao .portao .micro {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
+}
+
+.convocacao .portao .rotulo-topo {
+  top: 50%;
+  margin-top: -138px;
+}
+
+.convocacao .portao .rotulo-base {
+  top: 50%;
+  margin-top: 114px;
+}
+
+.convocacao .portao.pressionado .micro {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+}
+
+/* a câmera: escala tudo a partir do centro exato do lacre */
+.convocacao .zoom {
+  transition: transform 1.5s cubic-bezier(0.5, 0, 0.78, 0.3);
+  will-change: transform;
+}
+
+.convocacao .portao.atravessando .zoom {
+  transform: scale(15);
+}
+
+.convocacao .lacre-btn {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 148px;
+  height: 148px;
+}
+
+/* halo respirando atrás do lacre */
+.convocacao .lacre-btn::before {
+  content: "";
+  position: absolute;
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 162, 93, 0.34), transparent 66%);
+  animation: pd-respirar 3.4s ease-in-out infinite;
+  transition: opacity 0.5s ease;
+}
+
+@keyframes pd-respirar {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+.convocacao .portao.pressionado .lacre-btn::before {
+  animation: none;
+  opacity: 1;
+  transform: scale(1.25);
+}
+
+.convocacao .portao.rompido .lacre-btn::before {
+  opacity: 0;
+}
+
+.convocacao .lacre {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.convocacao .lacre-btn:hover .lacre,
+.convocacao .lacre-btn:focus-visible .lacre {
+  transform: scale(1.045);
+}
+
+/* a cera cede sob a pressão antes de ceder de vez */
+.convocacao .portao.pressionado .lacre {
+  transform: scale(0.955);
+}
+
+.convocacao .portao.rompido .lacre {
+  transform: scale(1);
+}
+
+/* a rachadura desce pelo meio do lacre */
+.convocacao .rachadura {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  width: 3px;
+  height: 96%;
+  margin-left: -1.5px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 246, 224, 0.95) 12%,
+    rgba(120, 88, 34, 0.9) 50%,
+    rgba(255, 246, 224, 0.95) 88%,
+    transparent
+  );
+  filter: drop-shadow(0 0 5px rgba(255, 238, 196, 0.9));
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.convocacao .portao.pressionado .rachadura {
+  opacity: 1;
+  transform: scaleY(1);
+  transition:
+    transform 0.42s cubic-bezier(0.6, 0.02, 0.9, 0.5),
+    opacity 0.12s ease;
+}
+
+.convocacao .portao.rompido .rachadura {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* as duas metades se sobrepõem 1% para a costura não aparecer antes da quebra,
+   e não desaparecem: o zoom as leva para fora do quadro */
+.convocacao .metade {
+  position: absolute;
+  inset: 0;
+  transition: transform 1.7s cubic-bezier(0.16, 0.7, 0.3, 1);
+}
+
+.convocacao .metade.esq {
+  clip-path: polygon(0 0, 53% 0, 48% 34%, 54% 62%, 50% 100%, 0 100%);
+}
+
+.convocacao .metade.dir {
+  clip-path: polygon(52% 0, 100% 0, 100% 100%, 49% 100%, 53% 62%, 47% 34%);
+}
+
+.convocacao .portao.rompido .metade.esq {
+  transform: translate(-46px, 34px) rotate(-19deg);
+}
+
+.convocacao .portao.rompido .metade.dir {
+  transform: translate(48px, 40px) rotate(16deg);
+}
+
+.convocacao .cera {
+  position: absolute;
+  inset: 0;
+  border-radius: 47% 53% 52% 48% / 51% 47% 53% 49%;
+  background: radial-gradient(
+    circle at 34% 28%,
+    var(--champagne-light),
+    var(--champagne) 46%,
+    #8a6a33 88%
+  );
+  box-shadow:
+    inset 0 2px 5px rgba(255, 240, 205, 0.55),
+    inset 0 -6px 14px rgba(60, 40, 10, 0.55),
+    0 14px 34px -10px rgba(0, 0, 0, 0.8);
+  display: grid;
+  place-items: center;
+}
+
+.convocacao .cera::before {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border-radius: 50% 47% 51% 49% / 48% 52% 47% 53%;
+  border: 1px solid rgba(74, 52, 18, 0.45);
+}
+
+.convocacao .monograma {
+  font-family: var(--f-display);
+  font-size: 2.05rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #6d5122;
+  text-shadow: 0 1px 0 rgba(255, 238, 200, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 0.34rem;
+  line-height: 1;
+}
+
+.convocacao .monograma i {
+  width: 1px;
+  height: 1.5rem;
+  background: rgba(109, 81, 34, 0.75);
+  display: block;
+}
+
+.convocacao .poeira {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  pointer-events: none;
+}
+
+/* ── Documento ───────────────────────────────────────────────────────────── */
+.convocacao .doc {
+  position: relative;
+  z-index: 2;
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+.convocacao .doc[hidden] {
+  display: none;
+}
+
+/* o documento emerge de dentro da fenda, não aparece por cima dela */
+.convocacao .doc.chegando {
+  opacity: 0;
+  transform: scale(0.9);
+  filter: blur(9px);
+}
+
+.convocacao .doc.assentando {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity 1.1s ease,
+    transform 1.4s cubic-bezier(0.16, 0.8, 0.28, 1),
+    filter 1s ease;
+}
+
+.convocacao .cartao {
+  position: relative;
+  padding: clamp(1.6rem, 6vw, 3rem) clamp(1.2rem, 5vw, 2.4rem) 2.4rem;
+  border: 1px solid rgba(201, 162, 93, 0.42);
+  outline: 1px solid rgba(201, 162, 93, 0.16);
+  outline-offset: 6px;
+  background:
+    radial-gradient(ellipse 90% 40% at 50% 0%, rgba(201, 162, 93, 0.09), transparent 62%),
+    linear-gradient(rgba(30, 23, 32, 0.72), rgba(18, 15, 20, 0.86));
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.6rem, 8vw, 3.6rem);
+}
+
+/* cantos facetados */
+.convocacao .cartao b {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: linear-gradient(135deg, var(--champagne-light), var(--rose-gold));
+  transform: rotate(45deg);
+}
+
+.convocacao .cartao b:nth-of-type(1) {
+  top: -4px;
+  left: -4px;
+}
+.convocacao .cartao b:nth-of-type(2) {
+  top: -4px;
+  right: -4px;
+}
+.convocacao .cartao b:nth-of-type(3) {
+  bottom: -4px;
+  left: -4px;
+}
+.convocacao .cartao b:nth-of-type(4) {
+  bottom: -4px;
+  right: -4px;
+}
+
+/* micro-rótulos: a voz "oficial" do documento */
+.convocacao .micro {
+  font-family: var(--f-util);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.convocacao .micro.frio {
+  color: rgba(199, 205, 214, 0.62);
+  letter-spacing: 0.3em;
+}
+
+.convocacao .fio {
+  height: 1px;
+  border: 0;
+  margin: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(201, 162, 93, 0.7),
+    rgba(217, 169, 160, 0.5),
+    transparent
+  );
+}
+
+/* ── Cabeçalho: o gesto tipográfico ──────────────────────────────────────── */
+.convocacao .cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  text-align: center;
+}
+
+.convocacao .negacao {
+  font-family: var(--f-voice);
+  font-style: italic;
+  font-size: clamp(1.25rem, 5.2vw, 1.55rem);
+  font-weight: 300;
+  color: rgba(199, 205, 214, 0.82);
+  margin: 0;
+}
+
+/* A palavra é desenhada em SVG para ocupar exatamente a largura do cartão em
+   qualquer tela. O textLength do markup é só o estado inicial, antes da fonte
+   carregar; assim que ela chega, o script mede o texto e ajusta o viewBox —
+   o quadro se adapta ao texto, e não o texto ao quadro. */
+.convocacao .marca {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1081 / 126;
+  overflow: visible;
+}
+
+.convocacao .marca text {
+  font-family: var(--f-display);
+  font-weight: 600;
+  fill: url(#pd-ouro);
+}
+
+/* ── Texto do casal ──────────────────────────────────────────────────────── */
+.convocacao .voz {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  text-align: center;
+}
+
+.convocacao .voz p {
+  margin: 0;
+  font-family: var(--f-voice);
+  font-size: clamp(1.08rem, 4.3vw, 1.24rem);
+  line-height: 1.68;
+  font-weight: 300;
+  color: rgba(246, 241, 232, 0.86);
+  /* o texto corrido nunca passa da largura confortável de leitura */
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+.convocacao .assinatura {
+  font-style: italic;
+  font-size: clamp(1.3rem, 5.6vw, 1.7rem);
+  color: var(--champagne-light);
+  line-height: 1.4;
+}
+
+/* ── O uniforme: ficha técnica, não lista decorada ───────────────────────── */
+.convocacao .bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.convocacao .bloco > .micro {
+  text-align: center;
+}
+
+.convocacao .uniforme {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.convocacao .ficha {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0;
+  border-top: 1px solid rgba(201, 162, 93, 0.2);
+}
+
+.convocacao .ficha dt,
+.convocacao .ficha dd {
+  margin: 0;
+  padding: 0.82rem 0.2rem;
+  border-bottom: 1px solid rgba(201, 162, 93, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.convocacao .ficha dt {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(199, 205, 214, 0.7);
+}
+
+.convocacao .ficha dd {
+  font-family: var(--f-voice);
+  font-size: 1.14rem;
+  color: var(--ivory);
+}
+
+/* amostra de tecido, não bolinha de cor: o risco de giz precisa ser lido */
+.convocacao .amostra {
+  width: 26px;
+  height: 17px;
+  flex: none;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 4px, rgba(214, 218, 226, 0.85) 4px 4.9px),
+    linear-gradient(#1c1a20, #111014);
+  box-shadow: 0 0 0 1px rgba(201, 162, 93, 0.35);
+}
+
+/* placas de referência: o creme do manual impresso vira o próprio objeto */
+.convocacao .placas {
+  display: grid;
+  grid-template-columns: 1.18fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 0.6rem;
+}
+
+/* Com next/image em modo fill a foto não tem altura intrínseca, então a
+   proporção do mosaico precisa vir daqui: as duas placas empilhadas ditam a
+   altura, e a placa alta ocupa as duas linhas. */
+.convocacao .placa {
+  margin: 0;
+  position: relative;
+  background: #ece7dd;
+  border: 1px solid rgba(201, 162, 93, 0.55);
+  overflow: hidden;
+  aspect-ratio: 4 / 7;
+}
+
+.convocacao .placa:first-child {
+  grid-row: span 2;
+  aspect-ratio: auto;
+}
+
+.convocacao .placa img {
+  object-fit: cover;
+  object-position: 50% 22%;
+}
+
+.convocacao .placa:first-child img {
+  object-position: 50% 50%;
+}
+
+/* ── Data e local ────────────────────────────────────────────────────────── */
+.convocacao .data {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.convocacao .numerais {
+  margin: 0;
+  font-family: var(--f-display);
+  font-weight: 500;
+  font-size: clamp(2.1rem, 9.4vw, 3.1rem);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ivory);
+  line-height: 1;
+}
+
+.convocacao .numerais span {
+  color: var(--champagne);
+  font-size: 0.55em;
+  vertical-align: 0.22em;
+}
+
+.convocacao .local {
+  margin: 0;
+  font-family: var(--f-voice);
+  font-size: 1.16rem;
+  color: rgba(246, 241, 232, 0.9);
+}
+
+.convocacao .endereco {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: rgba(199, 205, 214, 0.6);
+}
+
+.convocacao .acoes {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.convocacao .btn-fio {
+  font-family: var(--f-util);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--champagne-light);
+  text-decoration: none;
+  border: 1px solid rgba(201, 162, 93, 0.45);
+  padding: 0.72rem 1.15rem;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.convocacao .btn-fio:hover {
+  background: rgba(201, 162, 93, 0.12);
+  border-color: var(--champagne);
+}
+
+/* ── Aceite ──────────────────────────────────────────────────────────────── */
+.convocacao .aceite {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.convocacao .btn-ouro {
+  font-family: var(--f-util);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #1a1410;
+  text-decoration: none;
+  padding: 1.05rem 2rem;
+  background: linear-gradient(
+    135deg,
+    var(--champagne-light),
+    var(--champagne) 55%,
+    var(--rose-gold)
+  );
+  box-shadow: 0 0 28px -8px rgba(201, 162, 93, 0.8);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.convocacao .btn-ouro:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 36px -6px rgba(201, 162, 93, 0.95);
+}
+
+.convocacao .obs {
+  margin: 0;
+  font-family: var(--f-voice);
+  font-style: italic;
+  font-size: 1rem;
+  color: rgba(199, 205, 214, 0.62);
+}
+
+.convocacao .rodape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: center;
+}
+
+.convocacao .rodape .lg {
+  font-family: var(--f-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.3em;
+  color: var(--champagne);
+}
+
+.convocacao .rodape p {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: rgba(199, 205, 214, 0.42);
+  max-width: 24rem;
+  line-height: 1.7;
+}
+
+/* ── Revelação ───────────────────────────────────────────────────────────── */
+.convocacao .surge {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.95s ease,
+    transform 0.95s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.convocacao .surge.visivel {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Computador: a peça deixa de ser uma coluna estreita ─────────────────── */
+@media (min-width: 62rem) {
+  .convocacao {
+    --col: 56rem;
+  }
+
+  .convocacao .doc {
+    padding: 3.5rem 2rem 4rem;
+  }
+
+  .convocacao .cartao {
+    padding: 3.4rem 3rem 3rem;
+    gap: 3.6rem;
+  }
+
+  /* a ficha técnica e as fotos passam a conversar lado a lado */
+  .convocacao .uniforme {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.75rem;
+    align-items: center;
+  }
+
+  .convocacao .uniforme .ficha {
+    border-top-color: rgba(201, 162, 93, 0.3);
+  }
+
+  .convocacao .uniforme .ficha dt,
+  .convocacao .uniforme .ficha dd {
+    padding-block: 1.15rem;
+  }
+
+  .convocacao .uniforme .ficha dd {
+    font-size: 1.26rem;
+  }
+
+  .convocacao .cabecalho {
+    gap: 1.4rem;
+  }
+
+  .convocacao .negacao {
+    font-size: 1.7rem;
+  }
+
+  .convocacao .numerais {
+    font-size: 4.2rem;
+  }
+
+  .convocacao .local {
+    font-size: 1.3rem;
+  }
+
+  .convocacao .endereco {
+    font-size: 0.85rem;
+  }
+
+  .convocacao .voz p {
+    font-size: 1.3rem;
+  }
+
+  .convocacao .rodape p {
+    max-width: 30rem;
+  }
+}

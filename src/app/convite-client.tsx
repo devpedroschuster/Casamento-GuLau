@@ -6,15 +6,15 @@ import QrCodeAfter from "@/components/qr-code-after";
 
 type EtapaKey = "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after";
 
-const ETAPAS_POR_PERFIL: Record<Perfil, { key: EtapaKey; label: string }[]> = {
+const ETAPAS_POR_PERFIL: Record<Perfil, { key: EtapaKey; label: string; descricao: string; pago: boolean }[]> = {
   cerimonia_festa_after: [
-    { key: "confirmou_cerimonia", label: "Cerimônia" },
-    { key: "confirmou_festa", label: "Festa" },
-    { key: "confirmou_after", label: "After" },
+    { key: "confirmou_cerimonia", label: "Cerimônia", descricao: "Acesso à cerimônia de casamento.", pago: false },
+    { key: "confirmou_festa", label: "Festa", descricao: "Acesso à recepção e festa.", pago: false },
+    { key: "confirmou_after", label: "After", descricao: "Acesso ao after — pagamento via Pix.", pago: true },
   ],
   festa_after: [
-    { key: "confirmou_festa", label: "Festa" },
-    { key: "confirmou_after", label: "After" },
+    { key: "confirmou_festa", label: "Festa", descricao: "Acesso à recepção e festa.", pago: false },
+    { key: "confirmou_after", label: "After", descricao: "Acesso ao after — pagamento via Pix.", pago: true },
   ],
 };
 
@@ -29,18 +29,18 @@ export default function ConviteClient({
   const etapas = ETAPAS_POR_PERFIL[conviteInicial.perfil];
 
   return (
-    <div className="space-y-8 text-center">
+    <div className="space-y-10 text-center">
       <div className="space-y-2">
-        <p className="text-sm tracking-widest uppercase text-neutral-200">Laura & Gu</p>
-        <h1 className="text-2xl font-serif text-white">Olá, {conviteInicial.nome_exibicao}!</h1>
-        <p className="text-neutral-200">
-          Confirme a presença de cada pessoa do grupo nas etapas para as quais foram convidados.
+        <p className="text-xs tracking-[0.35em] uppercase eyebrow-metal font-medium">Seus ingressos</p>
+        <h2 className="text-3xl font-display italic text-ivory">Olá, {conviteInicial.nome_exibicao}!</h2>
+        <p className="text-platinum/80 text-sm">
+          Confirme, para cada pessoa do grupo, presença nas etapas para as quais foram convidados.
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {pessoas.map((pessoa) => (
-          <PessoaCard
+          <PessoaTickets
             key={pessoa.id}
             pessoa={pessoa}
             etapas={etapas}
@@ -51,40 +51,57 @@ export default function ConviteClient({
         ))}
       </div>
 
-      <button onClick={onTrocarNome} className="text-sm text-neutral-200 underline underline-offset-2">
+      <button onClick={onTrocarNome} className="text-sm text-platinum/70 underline underline-offset-2 hover:text-champagne-light transition">
         Não é você? Buscar outro nome
       </button>
     </div>
   );
 }
 
-function PessoaCard({
+function PessoaTickets({
   pessoa,
   etapas,
   onAtualizar,
 }: {
   pessoa: Pessoa;
-  etapas: { key: EtapaKey; label: string }[];
+  etapas: { key: EtapaKey; label: string; descricao: string; pago: boolean }[];
   onAtualizar: (pessoa: Pessoa) => void;
 }) {
-  const [respostas, setRespostas] = useState<Partial<Record<EtapaKey, boolean>>>({});
+  return (
+    <div className="space-y-3">
+      <p className="font-display italic text-xl text-ivory">{pessoa.nome}</p>
+      <div className="grid gap-3">
+        {etapas.map((etapa) => (
+          <TicketCard key={etapa.key} pessoa={pessoa} etapa={etapa} onAtualizar={onAtualizar} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TicketCard({
+  pessoa,
+  etapa,
+  onAtualizar,
+}: {
+  pessoa: Pessoa;
+  etapa: { key: EtapaKey; label: string; descricao: string; pago: boolean };
+  onAtualizar: (pessoa: Pessoa) => void;
+}) {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const jaRespondeu = !!pessoa.respondido_em;
-  const houveAlteracao = Object.keys(respostas).length > 0;
+  const valorAtual = pessoa[etapa.key];
+  const jaConfirmou = valorAtual === true;
+  const jaRecusou = valorAtual === false;
+  const indefinido = valorAtual === null || valorAtual === undefined;
 
-  function handleToggle(key: EtapaKey, value: boolean) {
-    setRespostas((prev) => ({ ...prev, [key]: value }));
-  }
-
-  async function handleSubmit() {
+  async function responder(valor: boolean) {
     setSalvando(true);
     setErro(null);
     try {
-      const atualizada = await confirmarPresenca(pessoa.id, respostas);
+      const atualizada = await confirmarPresenca(pessoa.id, { [etapa.key]: valor } as Partial<Pessoa>);
       onAtualizar(atualizada);
-      setRespostas({});
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao salvar sua confirmação");
     } finally {
@@ -92,63 +109,59 @@ function PessoaCard({
     }
   }
 
-  const confirmouAfter = pessoa.confirmou_after ?? respostas.confirmou_after;
-
   return (
-    <div className="space-y-4 border border-white/20 rounded-2xl p-4">
-      <p className="font-serif text-lg text-white">{pessoa.nome}</p>
-
-      {etapas.map((etapa) => {
-        const valorAtual = respostas[etapa.key] ?? pessoa[etapa.key] ?? undefined;
-        return (
-          <div
-            key={etapa.key}
-            className="flex items-center justify-between border border-neutral-200 rounded-xl px-4 py-3 bg-white/95 backdrop-blur-sm"
-          >
-            <span className="font-medium text-neutral-800">{etapa.label}</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleToggle(etapa.key, true)}
-                className={`px-3 py-1 rounded-full text-sm border transition ${
-                  valorAtual === true
-                    ? "bg-neutral-800 text-white border-neutral-800"
-                    : "border-neutral-300 text-neutral-600"
-                }`}
-              >
-                Vou
-              </button>
-              <button
-                onClick={() => handleToggle(etapa.key, false)}
-                className={`px-3 py-1 rounded-full text-sm border transition ${
-                  valorAtual === false
-                    ? "bg-neutral-800 text-white border-neutral-800"
-                    : "border-neutral-300 text-neutral-600"
-                }`}
-              >
-                Não vou
-              </button>
-            </div>
+    <div className="moldura p-5 text-left">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-display italic text-lg text-champagne-light">{etapa.label}</h3>
+            {etapa.pago && (
+              <span className="text-[10px] tracking-widest uppercase text-rose-gold border border-rose-gold/40 rounded-sm px-2 py-0.5">
+                Pago
+              </span>
+            )}
           </div>
-        );
-      })}
+          <p className="text-platinum/70 text-sm">{etapa.descricao}</p>
+        </div>
 
-      {erro && <p className="text-red-300 text-sm">{erro}</p>}
+        <div className="shrink-0">
+          {jaConfirmou && (
+            <span className="text-[11px] tracking-widest uppercase text-champagne-light">Confirmado</span>
+          )}
+          {jaRecusou && (
+            <span className="text-[11px] tracking-widest uppercase text-platinum/50">Não vai</span>
+          )}
+        </div>
+      </div>
 
-      {houveAlteracao && (
+      {erro && <p className="text-rose-gold text-sm mt-3">{erro}</p>}
+
+      <div className="flex gap-2 mt-4">
         <button
-          onClick={handleSubmit}
-          disabled={salvando}
-          className="w-full py-2.5 rounded-full bg-neutral-800 text-white font-medium disabled:opacity-50"
+          onClick={() => responder(true)}
+          disabled={salvando || jaConfirmou}
+          className={`flex-1 py-2 rounded-sm text-sm transition ${
+            jaConfirmou ? "btn-metal opacity-70 cursor-default" : "btn-metal"
+          }`}
         >
-          {salvando ? "Salvando..." : "Confirmar"}
+          {indefinido || jaRecusou ? "Confirmar presença" : "Confirmado"}
         </button>
-      )}
+        <button
+          onClick={() => responder(false)}
+          disabled={salvando || jaRecusou}
+          className={`px-4 py-2 rounded-sm text-sm border transition ${
+            jaRecusou ? "border-rose-gold/60 text-rose-gold" : "border-platinum/30 text-platinum/70"
+          }`}
+        >
+          Não vou
+        </button>
+      </div>
 
-      {jaRespondeu && !houveAlteracao && (
-        <p className="text-sm text-neutral-200">Resposta registrada. Pode alterar quando quiser.</p>
+      {etapa.pago && jaConfirmou && (
+        <div className="mt-4">
+          <QrCodeAfter slug={pessoa.id} valor={pessoa.valor_after} />
+        </div>
       )}
-
-      {confirmouAfter === true && <QrCodeAfter slug={pessoa.id} valor={pessoa.valor_after} />}
     </div>
   );
 }

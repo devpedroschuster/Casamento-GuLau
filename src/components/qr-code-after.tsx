@@ -34,9 +34,9 @@ export default function QrCodeAfter({ slug, valor }: { slug: string; valor: numb
   }, [slug, valorFinal]);
 
   return (
-    <div className="border border-neutral-200 rounded-xl p-4 bg-white space-y-3">
-      <p className="font-medium text-neutral-800">Pagamento do After</p>
-      <p className="text-sm text-neutral-600">
+    <div className="rounded-sm border border-champagne/30 p-4 bg-ivory space-y-3">
+      <p className="font-medium text-onyx">Pagamento do After</p>
+      <p className="text-sm text-onyx/70">
         Escaneie o QR Code abaixo para pagar via Pix
         {valorFinal ? ` (R$ ${valorFinal.toFixed(2)})` : ""}.
       </p>

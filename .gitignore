@@ -3,3 +3,8 @@ node_modules
 .env.local
 .env
 convidados-links.csv
+convidados.csv
+AGENTS.md
+CLAUDE.md
+tsconfig.tsbuildinfo
+repomix-output.xml
