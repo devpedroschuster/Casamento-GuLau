@@ -41,6 +41,13 @@ const PLACAS = [
   { src: "/padrinhos/traje-3.jpg", alt: "Terno preto risca de giz com gravata preta e camisa branca" },
 ];
 
+/* A palavra do cabeçalho, em um lugar só: ela alimenta o <h1> acessível, o
+   desenho em SVG e a largura do primeiro quadro. Bodoni mede cerca de 114px
+   por caixa-alta em corpo 150; essa estimativa vale só até a fonte carregar,
+   quando a medida real assume. */
+const PALAVRA = "CONVOCADO";
+const QUADRO_INICIAL = Math.round(PALAVRA.length * 114 * 1.02);
+
 const CORES = ["236,214,164", "212,220,232", "255,249,232", "201,162,93"];
 
 /** Sprite da estrela de quatro pontas, desenhado uma única vez por cor. */
@@ -118,10 +125,15 @@ export default function Convocacao() {
   const ajustarPalavra = useRef(() => {});
 
   useEffect(() => {
+    /* Idempotente de propósito. A medida varia entre chamadas — a fonte
+       variável ainda está resolvendo o eixo óptico, e o layout pode não ter
+       assentado —, e uma medida curta demais faria a palavra transbordar o
+       cartão. Então medimos de novo sempre que houver motivo, e o último
+       valor manda. */
     ajustarPalavra.current = () => {
       const svg = marcaRef.current;
       const texto = palavraRef.current;
-      if (palavraAjustadaRef.current || !fontesProntasRef.current) return;
+      if (!fontesProntasRef.current) return;
       if (!svg || !texto || !svg.getClientRects().length) return;
 
       texto.removeAttribute("textLength");
@@ -129,21 +141,30 @@ export default function Convocacao() {
 
       const largura = texto.getComputedTextLength();
       if (!largura || !isFinite(largura)) {
-        texto.setAttribute("textLength", "1081");
-        texto.setAttribute("lengthAdjust", "spacingAndGlyphs");
+        if (!palavraAjustadaRef.current) {
+          texto.setAttribute("textLength", String(QUADRO_INICIAL / 1.02));
+          texto.setAttribute("lengthAdjust", "spacingAndGlyphs");
+        }
         return;
       }
 
-      svg.setAttribute("viewBox", `0 0 ${largura} 126`);
-      svg.style.aspectRatio = `${largura} / 126`;
+      // 2% de folga: qualquer resto de imprecisão vira respiro dos dois lados,
+      // em vez de a palavra encostar (ou vazar) na borda do cartão
+      const quadro = largura * 1.02;
+      svg.setAttribute("viewBox", `0 0 ${quadro} 126`);
+      svg.style.aspectRatio = `${quadro} / 126`;
+      texto.setAttribute("x", String(quadro / 2));
       palavraAjustadaRef.current = true;
     };
 
     let cancelado = false;
+    const remedir = () => {
+      if (!cancelado) ajustarPalavra.current();
+    };
     const marcarFontes = () => {
       if (cancelado) return;
       fontesProntasRef.current = true;
-      ajustarPalavra.current();
+      remedir();
     };
 
     if (document.fonts?.ready) {
@@ -151,10 +172,12 @@ export default function Convocacao() {
     } else {
       addEventListener("load", marcarFontes);
     }
+    addEventListener("resize", remedir);
 
     return () => {
       cancelado = true;
       removeEventListener("load", marcarFontes);
+      removeEventListener("resize", remedir);
     };
   }, []);
 
@@ -315,24 +338,29 @@ export default function Convocacao() {
       const r = botao.getBoundingClientRect();
       estourar(r.left + r.width / 2, r.top + r.height / 2);
       portao.classList.add("rompido");
-    }, 430);
+    }, 400);
 
-    setTimeout(() => portao.classList.add("atravessando"), 760);
+    // a aba levanta e revela a boca escura do envelope
+    setTimeout(() => portao.classList.add("abrindo"), 800);
+
+    setTimeout(() => portao.classList.add("atravessando"), 1450);
 
     setTimeout(() => {
       doc.hidden = false;
       ajustarPalavra.current(); // agora o SVG tem layout e pode ser medido
+      // e de novo com o layout assentado, porque a primeira medida oscila
+      setTimeout(() => ajustarPalavra.current(), 600);
       doc.classList.add("chegando");
       // reflow forçado em vez de requestAnimationFrame: rAF não roda em aba
       // oculta, e o documento ficaria preso em opacidade 0
       void doc.offsetWidth;
       doc.classList.add("assentando");
-    }, 1020);
+    }, 1750);
 
     setTimeout(() => {
       partes[0]?.classList.add("visivel");
       partes[1]?.classList.add("visivel");
-    }, 1500);
+    }, 2200);
 
     const obs = new IntersectionObserver(
       (entradas) => {
@@ -349,8 +377,8 @@ export default function Convocacao() {
       if (i >= 2) obs.observe(el);
     });
 
-    setTimeout(() => portao.classList.add("saindo"), 1750);
-    setTimeout(() => portao.remove(), 3000);
+    setTimeout(() => portao.classList.add("saindo"), 2400);
+    setTimeout(() => portao.remove(), 3700);
 
     // Rede de segurança: se a transição não chegar a rodar — aba oculta, o
     // navegador engasgando —, o documento tem de terminar visível de todo
@@ -363,7 +391,7 @@ export default function Convocacao() {
         doc.style.transform = "none";
         doc.style.filter = "none";
       }
-    }, 2800);
+    }, 3500);
   };
 
   return (
@@ -373,33 +401,62 @@ export default function Convocacao() {
       <canvas className="brilho" ref={brilhoRef} aria-hidden="true" />
 
       <div className="portao" ref={portaoRef}>
-        <p className="micro rotulo-topo">Comunicado reservado</p>
         <div className="zoom">
-          <button
-            type="button"
-            className="lacre-btn"
-            ref={botaoRef}
-            onClick={revelar}
-            aria-label="Romper o lacre e abrir a convocação"
-          >
-            <span className="lacre" aria-hidden="true">
-              <span className="metade esq">
-                <span className="cera">
-                  <span className="monograma">
-                    L<i />G
+          <div className="envelope">
+            <div className="papel" aria-hidden="true" />
+            {/* as duas dobras de baixo ficam no corpo; as de cima viajam com a aba */}
+            <svg className="vincos" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
+              <g stroke="#c9a25d" strokeWidth="0.4" fill="none" opacity="0.85">
+                <path d="M0 140 L50 70" />
+                <path d="M100 140 L50 70" />
+              </g>
+            </svg>
+            <Ornamento className="ornamento-pe" />
+            <div className="interior" aria-hidden="true" />
+
+            <div className="aba" aria-hidden="true">
+              <div className="aba-face">
+                <svg
+                  className="vincos"
+                  viewBox="0 0 100 140"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <g stroke="#c9a25d" strokeWidth="0.4" fill="none" opacity="0.85">
+                    <path d="M0 0 L50 70" />
+                    <path d="M100 0 L50 70" />
+                  </g>
+                </svg>
+                <div className="dizeres">
+                  <p className="para">Para alguém</p>
+                  <p className="especial">especial</p>
+                  <Ornamento className="ornamento" />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="lacre-btn"
+              ref={botaoRef}
+              onClick={revelar}
+              aria-label="Romper o lacre e abrir a convocação"
+            >
+              <span className="lacre" aria-hidden="true">
+                <span className="metade esq">
+                  <span className="cera">
+                    <Monograma />
                   </span>
                 </span>
-              </span>
-              <span className="metade dir">
-                <span className="cera">
-                  <span className="monograma">
-                    L<i />G
+                <span className="metade dir">
+                  <span className="cera">
+                    <Monograma />
                   </span>
                 </span>
+                <span className="rachadura" />
               </span>
-              <span className="rachadura" />
-            </span>
-          </button>
+            </button>
+          </div>
         </div>
         <p className="micro frio rotulo-base">toque para romper o lacre</p>
       </div>
@@ -415,11 +472,12 @@ export default function Convocacao() {
           <header className="cabecalho surge">
             <p className="micro">Comunicado oficial &middot; Laura &amp; Gustavo</p>
             <p className="negacao">Você não foi convidado. Mas sim,</p>
-            <h1 className="visualmente-oculto">Convocados</h1>
+            <h1 className="visualmente-oculto">{PALAVRA}</h1>
             <svg
               className="marca"
               ref={marcaRef}
-              viewBox="0 0 1081 126"
+              viewBox={`0 0 ${QUADRO_INICIAL} 126`}
+              style={{ aspectRatio: `${QUADRO_INICIAL} / 126` }}
               aria-hidden="true"
               focusable="false"
             >
@@ -444,13 +502,14 @@ export default function Convocacao() {
               </defs>
               <text
                 ref={palavraRef}
-                x="0"
+                x={QUADRO_INICIAL / 2}
                 y="112"
                 fontSize="150"
-                textLength="1081"
+                textAnchor="middle"
+                textLength={QUADRO_INICIAL / 1.02}
                 lengthAdjust="spacingAndGlyphs"
               >
-                CONVOCADO
+                {PALAVRA}
               </text>
             </svg>
             <hr className="fio" />
@@ -531,6 +590,44 @@ export default function Convocacao() {
         </article>
       </main>
     </div>
+  );
+}
+
+/** Coração em ouro — o mesmo desenho serve o lacre e os ornamentos. */
+function Coracao({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 22" fill="currentColor" aria-hidden="true">
+      <path d="M12 21C12 21 1.8 14.6 1.8 7.9 1.8 4.2 4.6 1.6 8 1.6c2 0 3.4 1 4 2.2.6-1.2 2-2.2 4-2.2 3.4 0 6.2 2.6 6.2 6.3C22.2 14.6 12 21 12 21Z" />
+    </svg>
+  );
+}
+
+/** O selo de cera: as iniciais e o coração, como no lacre impresso. */
+function Monograma() {
+  return (
+    <span className="monograma">
+      <span className="iniciais">
+        L<i />G
+      </span>
+      <Coracao />
+    </span>
+  );
+}
+
+/** Filete com volutas e um coração ao centro, no gosto do convite tradicional. */
+function Ornamento({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 240 34" fill="none" aria-hidden="true">
+      <g stroke="currentColor" strokeWidth="1.1" strokeLinecap="round">
+        <path d="M52 26h60M128 26h60" />
+        <path d="M120 21.5 124.5 26 120 30.5 115.5 26Z" strokeWidth="0.9" />
+        <path d="M52 26c-7 0-7-6.5-12.5-6.5-4.5 0-6.5 3.6-3.6 5.4 1.8 1.1 4.5.4 4.5-1.8 0-2.7-3.6-4.5-8-4.5" />
+        <path d="M188 26c7 0 7-6.5 12.5-6.5 4.5 0 6.5 3.6 3.6 5.4-1.8 1.1-4.5.4-4.5-1.8 0-2.7 3.6-4.5 8-4.5" />
+      </g>
+      <g transform="translate(112.8 2) scale(0.6)" fill="currentColor">
+        <path d="M12 21C12 21 1.8 14.6 1.8 7.9 1.8 4.2 4.6 1.6 8 1.6c2 0 3.4 1 4 2.2.6-1.2 2-2.2 4-2.2 3.4 0 6.2 2.6 6.2 6.3C22.2 14.6 12 21 12 21Z" />
+      </g>
+    </svg>
   );
 }
 

@@ -11,6 +11,7 @@
   --f-util: var(--font-manrope), system-ui, -apple-system, sans-serif;
 
   --col: 34rem;
+  --lacre: clamp(4.4rem, 17vw, 5.6rem);
 
   position: relative;
   min-height: 100vh;
@@ -108,21 +109,27 @@ body:has(.convocacao) .glitter-field {
   pointer-events: none;
 }
 
-/* ── O lacre ─────────────────────────────────────────────────────────────── */
+/* ── O envelope ──────────────────────────────────────────────────────────
+   A piada depende disto: quanto mais o lacre parecer um convite de casamento
+   comum e afetuoso, mais forte fica o "vocês não foram convidados" logo
+   depois. Por isso o envelope é de papel creme, engravado a ouro, e é a única
+   coisa iluminada no meio do céu escuro. */
 .convocacao .portao {
   position: fixed;
   inset: 0;
   z-index: 30;
-  display: grid;
-  place-content: center;
-  place-items: center;
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.4rem, 5vw, 2.2rem);
+  padding: 2rem 1.5rem;
   overflow: hidden;
-  /* só um véu: as estrelas continuam visíveis por trás do lacre */
+  /* só um véu: as estrelas continuam visíveis em volta do envelope */
   background: radial-gradient(
-    ellipse 75% 55% at 50% 52%,
-    rgba(18, 15, 20, 0.5),
-    rgba(18, 15, 20, 0.86) 82%
+    ellipse 75% 55% at 50% 50%,
+    rgba(18, 15, 20, 0.45),
+    rgba(18, 15, 20, 0.88) 82%
   );
   transition:
     opacity 0.95s ease,
@@ -134,32 +141,20 @@ body:has(.convocacao) .glitter-field {
   visibility: hidden;
 }
 
-.convocacao .portao .micro {
+.convocacao .portao .rotulo-base {
   margin: 0;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   transition:
     opacity 0.45s ease,
     transform 0.45s ease;
 }
 
-.convocacao .portao .rotulo-topo {
-  top: 50%;
-  margin-top: -138px;
-}
-
-.convocacao .portao .rotulo-base {
-  top: 50%;
-  margin-top: 114px;
-}
-
-.convocacao .portao.pressionado .micro {
+.convocacao .portao.pressionado .rotulo-base {
   opacity: 0;
-  transform: translateX(-50%) translateY(8px);
+  transform: translateY(8px);
 }
 
-/* a câmera: escala tudo a partir do centro exato do lacre */
+/* a câmera: escala tudo a partir do centro exato do envelope, que é onde
+   fica o lacre e para onde converge a boca do envelope */
 .convocacao .zoom {
   transition: transform 1.5s cubic-bezier(0.5, 0, 0.78, 0.3);
   will-change: transform;
@@ -169,6 +164,135 @@ body:has(.convocacao) .glitter-field {
   transform: scale(15);
 }
 
+.convocacao .envelope {
+  position: relative;
+  width: min(76vw, 21rem);
+  aspect-ratio: 5 / 7;
+  perspective: 1400px;
+  filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.75));
+}
+
+/* o papel: creme com uma leve variação de tom, como papel de algodão */
+.convocacao .papel {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 30% 20%, rgba(255, 255, 255, 0.85), transparent 60%),
+    linear-gradient(160deg, #f4f0e7, #e7e0d3);
+}
+
+/* as duas dobras de baixo, em fio de ouro */
+.convocacao .vincos {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* a boca escura, que só aparece quando a aba levanta */
+.convocacao .interior {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 50%);
+  /* o filete claro no alto é a dobra do papel pegando luz: sem ele a boca do
+     envelope lê como um buraco recortado, e não como profundidade */
+  background:
+    linear-gradient(180deg, rgba(255, 246, 230, 0.12), transparent 20%),
+    linear-gradient(180deg, #171220, #0b090e 78%);
+  box-shadow: inset 0 16px 30px rgba(0, 0, 0, 0.85);
+}
+
+/* ── A aba de cima ───────────────────────────────────────────────────────── */
+/* Uma face só, de propósito: clip-path num elemento com backface-visibility
+   achata o contexto 3D e a aba simplesmente some. Como o verso de uma aba é
+   papel liso, basta apagar os dizeres enquanto ela levanta — o que se vê do
+   outro lado é exatamente o que se veria numa carta de verdade. */
+.convocacao .aba {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 0;
+  transition: transform 1.15s cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.convocacao .portao.abrindo .aba {
+  transform: rotateX(-168deg);
+}
+
+.convocacao .aba-face {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 50%);
+  background:
+    radial-gradient(ellipse 90% 70% at 40% 10%, rgba(255, 255, 255, 0.9), transparent 62%),
+    linear-gradient(170deg, #f5f1e9, #e9e2d6);
+  transition: filter 1.15s ease;
+}
+
+/* a aba escurece ao virar, como papel saindo da luz */
+.convocacao .portao.abrindo .aba-face {
+  filter: brightness(0.78);
+}
+
+.convocacao .dizeres,
+.convocacao .aba-face .vincos {
+  transition: opacity 0.4s ease;
+}
+
+.convocacao .portao.abrindo .dizeres,
+.convocacao .portao.abrindo .aba-face .vincos {
+  opacity: 0;
+}
+
+.convocacao .dizeres {
+  position: absolute;
+  inset: 12% 18% auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  color: #a98436;
+  text-align: center;
+}
+
+.convocacao .para {
+  margin: 0;
+  font-family: var(--f-util);
+  font-size: clamp(0.62rem, 2.6vw, 0.76rem);
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-transform: uppercase;
+}
+
+.convocacao .especial {
+  margin: 0;
+  font-family: var(--f-voice);
+  font-style: italic;
+  font-size: clamp(1.5rem, 6.4vw, 2rem);
+  font-weight: 400;
+  line-height: 1.1;
+  color: #b08b3c;
+}
+
+.convocacao .ornamento {
+  display: block;
+  width: clamp(6.5rem, 30vw, 9rem);
+  height: auto;
+  margin-top: 0.5rem;
+  color: #bf9645;
+}
+
+.convocacao .ornamento-pe {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  transform: translateX(-50%);
+  width: clamp(8rem, 42vw, 12rem);
+  height: auto;
+  color: #bf9645;
+}
+
+/* ── O lacre ─────────────────────────────────────────────────────────────── */
 .convocacao .lacre-btn {
   appearance: none;
   background: none;
@@ -177,63 +301,49 @@ body:has(.convocacao) .glitter-field {
   cursor: pointer;
   display: grid;
   place-items: center;
-  position: relative;
-  width: 148px;
-  height: 148px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--lacre) * 1.16);
+  height: calc(var(--lacre) * 1.16);
+  transform: translate(-50%, -50%);
 }
 
-/* halo respirando atrás do lacre */
-.convocacao .lacre-btn::before {
-  content: "";
-  position: absolute;
-  width: 148px;
-  height: 148px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(201, 162, 93, 0.34), transparent 66%);
-  animation: pd-respirar 3.4s ease-in-out infinite;
-  transition: opacity 0.5s ease;
+/* Sobre papel creme não cabe halo dourado — vira mancha. A vida do lacre vem
+   de uma respiração no próprio selo; o que ele projeta no papel é sombra de
+   contato, como cera de verdade. */
+.convocacao .lacre {
+  position: relative;
+  width: var(--lacre);
+  height: var(--lacre);
+  animation: pd-respirar 3.6s ease-in-out infinite;
+  transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
 @keyframes pd-respirar {
   0%,
   100% {
-    opacity: 0.45;
-    transform: scale(0.92);
+    transform: scale(1);
   }
   50% {
-    opacity: 1;
-    transform: scale(1.12);
+    transform: scale(1.035);
   }
-}
-
-.convocacao .portao.pressionado .lacre-btn::before {
-  animation: none;
-  opacity: 1;
-  transform: scale(1.25);
-}
-
-.convocacao .portao.rompido .lacre-btn::before {
-  opacity: 0;
-}
-
-.convocacao .lacre {
-  position: relative;
-  width: 128px;
-  height: 128px;
-  transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
 .convocacao .lacre-btn:hover .lacre,
 .convocacao .lacre-btn:focus-visible .lacre {
-  transform: scale(1.045);
+  animation: none;
+  transform: scale(1.055);
 }
 
 /* a cera cede sob a pressão antes de ceder de vez */
 .convocacao .portao.pressionado .lacre {
+  animation: none;
   transform: scale(0.955);
 }
 
 .convocacao .portao.rompido .lacre {
+  animation: none;
   transform: scale(1);
 }
 
@@ -310,7 +420,9 @@ body:has(.convocacao) .glitter-field {
   box-shadow:
     inset 0 2px 5px rgba(255, 240, 205, 0.55),
     inset 0 -6px 14px rgba(60, 40, 10, 0.55),
-    0 14px 34px -10px rgba(0, 0, 0, 0.8);
+    /* sombra de contato curta, como cera pingada sobre o papel */ 0 3px 5px
+      rgba(92, 66, 24, 0.28),
+    0 8px 18px -6px rgba(64, 45, 16, 0.34);
   display: grid;
   place-items: center;
 }
@@ -318,29 +430,42 @@ body:has(.convocacao) .glitter-field {
 .convocacao .cera::before {
   content: "";
   position: absolute;
-  inset: 11px;
+  inset: 9%;
   border-radius: 50% 47% 51% 49% / 48% 52% 47% 53%;
   border: 1px solid rgba(74, 52, 18, 0.45);
 }
 
 .convocacao .monograma {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1em;
   font-family: var(--f-display);
-  font-size: 2.05rem;
+  font-size: calc(var(--lacre) * 0.27);
   font-weight: 500;
   letter-spacing: 0.04em;
   color: #6d5122;
   text-shadow: 0 1px 0 rgba(255, 238, 200, 0.5);
-  display: flex;
-  align-items: center;
-  gap: 0.34rem;
   line-height: 1;
 }
 
-.convocacao .monograma i {
+.convocacao .iniciais {
+  display: flex;
+  align-items: center;
+  gap: 0.28em;
+}
+
+.convocacao .iniciais i {
   width: 1px;
-  height: 1.5rem;
+  height: 1.15em;
   background: rgba(109, 81, 34, 0.75);
   display: block;
+}
+
+.convocacao .monograma svg {
+  width: 0.42em;
+  height: auto;
+  color: rgba(109, 81, 34, 0.85);
 }
 
 .convocacao .poeira {
@@ -473,7 +598,6 @@ body:has(.convocacao) .glitter-field {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1081 / 126;
   overflow: visible;
 }
 
