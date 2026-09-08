@@ -43,48 +43,126 @@ body {
   position: relative;
 }
 
-/* Brilho — camada fixa, atrás do conteúdo mas acima do fundo, com pontos grandes o bastante pra aparecer de verdade */
-.glitter-field {
+/* Céu de estrelas em canvas (ver StarField) — camada fixa, atrás do conteúdo
+   mas acima do fundo. As estrelas em si (tamanho, cor, cintilação) são
+   desenhadas no canvas; aqui só o posicionamento da camada. */
+.star-field {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image:
-    radial-gradient(3px 3px at 6% 12%, rgba(236, 214, 164, 1), transparent 70%),
-    radial-gradient(2.5px 2.5px at 18% 32%, rgba(199, 205, 214, .95), transparent 70%),
-    radial-gradient(3.5px 3.5px at 30% 8%, rgba(217, 169, 160, 1), transparent 70%),
-    radial-gradient(2px 2px at 44% 60%, rgba(236, 214, 164, .9), transparent 70%),
-    radial-gradient(3px 3px at 58% 22%, rgba(199, 205, 214, 1), transparent 70%),
-    radial-gradient(2.5px 2.5px at 68% 45%, rgba(217, 169, 160, .95), transparent 70%),
-    radial-gradient(3.5px 3.5px at 78% 15%, rgba(236, 214, 164, 1), transparent 70%),
-    radial-gradient(2px 2px at 88% 55%, rgba(199, 205, 214, .9), transparent 70%),
-    radial-gradient(3px 3px at 10% 70%, rgba(217, 169, 160, 1), transparent 70%),
-    radial-gradient(2.5px 2.5px at 25% 85%, rgba(236, 214, 164, .9), transparent 70%),
-    radial-gradient(3.5px 3.5px at 40% 92%, rgba(199, 205, 214, 1), transparent 70%),
-    radial-gradient(2px 2px at 55% 78%, rgba(217, 169, 160, .9), transparent 70%),
-    radial-gradient(3px 3px at 70% 88%, rgba(236, 214, 164, 1), transparent 70%),
-    radial-gradient(2.5px 2.5px at 92% 80%, rgba(199, 205, 214, .95), transparent 70%),
-    radial-gradient(3px 3px at 95% 35%, rgba(217, 169, 160, 1), transparent 70%),
-    radial-gradient(2px 2px at 50% 40%, rgba(236, 214, 164, .9), transparent 70%),
-    radial-gradient(2.5px 2.5px at 15% 50%, rgba(199, 205, 214, .9), transparent 70%),
-    radial-gradient(3px 3px at 82% 65%, rgba(217, 169, 160, 1), transparent 70%);
-  filter: drop-shadow(0 0 3px rgba(236, 214, 164, .5));
-  animation: cintilar 3.2s ease-in-out infinite;
 }
 
-.glitter-field.camada-2 {
-  animation-duration: 4.6s;
-  animation-delay: .8s;
-  transform: translateY(120px);
+/* ── Abertura de palco (CurtainIntro) ───────────────────────────────────────
+   Cortina fechada cobrindo a tela, spotlight e o casal em silhueta aparecem,
+   e então as duas metades se abrem para os lados revelando o site. Roda uma
+   vez por sessão; ver curtain-intro.tsx para a máquina de estados. */
+.cortina-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.6s ease;
 }
 
-@keyframes cintilar {
-  0%, 100% { opacity: .35; }
-  50% { opacity: 1; }
+.cortina-intro.saindo {
+  opacity: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .glitter-field { animation: none; opacity: .7; }
+.cortina-intro::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(28px, 6vw, 46px);
+  background: linear-gradient(180deg, var(--champagne-light), var(--champagne) 60%, #8a6a33);
+  -webkit-mask-image: radial-gradient(circle at 10px 0, transparent 9px, #000 10px);
+  -webkit-mask-size: 20px 100%;
+  mask-image: radial-gradient(circle at 10px 0, transparent 9px, #000 10px);
+  mask-size: 20px 100%;
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 1s ease;
+  transition-delay: 1.5s;
+}
+
+.cortina-intro.abrindo::before {
+  opacity: 0;
+}
+
+.cortina-intro .cortina-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(236, 214, 164, 0.55),
+    rgba(236, 214, 164, 0.12) 30%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  transition-delay: 0.3s;
+}
+
+.cortina-intro.abrindo .cortina-spotlight {
+  opacity: 1;
+}
+
+.cortina-intro .cortina-valsantes {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: clamp(9rem, 30vw, 15rem);
+  height: auto;
+  color: var(--champagne-light);
+  transform: translate(-50%, -50%) scale(0.85);
+  opacity: 0;
+  filter: drop-shadow(0 0 14px rgba(236, 214, 164, 0.55));
+  transition:
+    opacity 1s ease,
+    transform 1.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: 0.5s;
+}
+
+.cortina-intro.abrindo .cortina-valsantes {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1) rotate(4deg);
+}
+
+.cortina-intro .cortina {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 52%;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 14px, transparent 14px 28px),
+    linear-gradient(160deg, var(--onyx-2), var(--onyx) 60%);
+  box-shadow: inset -40px 0 60px -20px rgba(0, 0, 0, 0.7);
+  transition: transform 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+  transition-delay: 1.1s;
+}
+
+.cortina-intro .esquerda {
+  left: 0;
+  border-right: 2px solid rgba(201, 162, 93, 0.5);
+}
+
+.cortina-intro .direita {
+  right: 0;
+  border-left: 2px solid rgba(201, 162, 93, 0.5);
+}
+
+.cortina-intro.abrindo .esquerda {
+  transform: translateX(-100%);
+}
+
+.cortina-intro.abrindo .direita {
+  transform: translateX(100%);
 }
 
 .secao {
@@ -119,20 +197,55 @@ body {
   box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
 }
 
-.moldura::before,
-.moldura::after {
-  content: "";
+/* Cantos facetados — quatro elementos (ver Cantos), no espírito dos cantos do
+   .cartao da convocação: um pseudo-elemento só dá para posicionar em dois
+   lugares, então aqui são filhos reais. */
+.canto-facetado {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   background: linear-gradient(135deg, var(--champagne-light), var(--rose-gold));
   transform: rotate(45deg);
-  top: -5px;
-  filter: drop-shadow(0 0 4px rgba(236, 214, 164, .6));
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px rgba(236, 214, 164, 0.6));
 }
 
-.moldura::before { left: -5px; }
-.moldura::after { right: -5px; }
+.canto-facetado:nth-of-type(1) { top: -4px; left: -4px; }
+.canto-facetado:nth-of-type(2) { top: -4px; right: -4px; }
+.canto-facetado:nth-of-type(3) { bottom: -4px; left: -4px; }
+.canto-facetado:nth-of-type(4) { bottom: -4px; right: -4px; }
+
+/* Brilho de palco — spotlight pulsando atrás de um título ou número, como o
+   destaque de um refletor de teatro. */
+.brilho-palco {
+  position: relative;
+  isolation: isolate;
+}
+
+.brilho-palco::before {
+  content: "";
+  position: absolute;
+  inset: -35% -25%;
+  z-index: -1;
+  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(236, 214, 164, 0.35), transparent 70%);
+  filter: blur(6px);
+  animation: spot-respirar 4.5s ease-in-out infinite;
+}
+
+@keyframes spot-respirar {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+/* Filete ornamental (ver Filete) — divisor entre seções */
+.filete {
+  display: block;
+  width: clamp(7rem, 26vw, 10rem);
+  height: auto;
+  margin-inline: auto;
+  color: var(--champagne);
+  opacity: 0.85;
+}
 
 .eyebrow-metal {
   background: linear-gradient(90deg, var(--platinum), var(--champagne-light), var(--rose-gold-light));
@@ -142,15 +255,39 @@ body {
 }
 
 .btn-metal {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--champagne-light), var(--champagne) 55%, var(--rose-gold));
   color: var(--onyx);
   font-weight: 600;
   box-shadow: 0 0 20px -6px rgba(201, 162, 93, .7);
 }
 
+/* Um brilho de metal varrendo o botão de tempos em tempos, como luz de palco
+   batendo numa lantejoula. */
+.btn-metal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  background-size: 220% 100%;
+  background-position: 130% 0;
+  animation: metal-brilho 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes metal-brilho {
+  0%, 60% { background-position: 130% 0; }
+  100% { background-position: -30% 0; }
+}
+
 .btn-metal:disabled {
   opacity: 0.45;
   box-shadow: none;
+}
+
+.btn-metal:disabled::after {
+  animation: none;
 }
 
 .linha-metal {

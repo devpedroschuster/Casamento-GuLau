@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Perfil } from "@/lib/supabase-functions";
+import Cantos from "./cantos";
 
 type Slide = {
   titulo: string;
@@ -61,6 +62,7 @@ export default function InfoCarousel({
 
   return (
     <div className="moldura p-6 space-y-6 text-left">
+      <Cantos />
       <div className="text-center space-y-1">
         <p className="text-xs tracking-[0.35em] uppercase eyebrow-metal font-medium">
           Antes de confirmar

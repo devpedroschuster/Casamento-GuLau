@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { buscarConvite, type Convite } from "@/lib/supabase-functions";
 import ConviteClient from "./convite-client";
 import InfoCarousel from "./components/info-carousel";
+import Cantos from "./components/cantos";
 
 const CHAVE_NOME = "laura-gu:nome-checkin";
 const CHAVE_INFO_VISTA = "laura-gu:info-vista";
@@ -91,6 +92,7 @@ export default function BuscaConvite() {
   return (
     <section id="checkin" className="secao max-w-md mx-auto px-6 py-20">
       <div className="moldura px-8 py-10 space-y-7 text-center">
+        <Cantos />
         <div className="space-y-3">
           <p className="text-xs tracking-[0.35em] uppercase eyebrow-metal font-medium">Check-in</p>
           <h2 className="text-3xl font-display italic text-ivory">Faça seu check-in</h2>

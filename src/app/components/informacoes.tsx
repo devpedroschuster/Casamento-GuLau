@@ -1,3 +1,5 @@
+import Cantos from "./cantos";
+
 const CARDS = [
   {
     titulo: "Quando",
@@ -27,6 +29,7 @@ export default function Informacoes() {
       <div className="grid sm:grid-cols-2 gap-5">
         {CARDS.map((c) => (
           <div key={c.titulo} className="moldura p-6">
+            <Cantos />
             <h3 className="font-display italic text-xl mb-2 text-champagne-light">{c.titulo}</h3>
             <p className="text-platinum/80 text-sm leading-relaxed">{c.texto}</p>
           </div>

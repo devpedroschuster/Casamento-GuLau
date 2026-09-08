@@ -43,20 +43,17 @@
 }
 
 /* ── Fundo próprio ────────────────────────────────────────────────────────
-   Vem depois do .glitter-field do layout raiz no DOM e com o mesmo z-index,
-   então o cobre: esta página tem o céu dela, não o do site. */
+   Vem depois do .star-field do layout raiz no DOM e com o mesmo z-index,
+   então o cobre: esta página tem o céu dela (o próprio StarField, com
+   sempreAtivo — ver convocacao.tsx e star-field.tsx), não o do layout raiz,
+   que se desliga sozinho nesta rota para não desenhar à toa atrás desta
+   camada opaca. */
 .convocacao .pd-fundo {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background: var(--onyx);
-}
-
-/* O .pd-fundo já esconde o glitter do site; isto só evita animá-lo à toa
-   atrás de uma camada opaca. Onde :has não existir, nada muda visualmente. */
-body:has(.convocacao) .glitter-field {
-  display: none;
 }
 
 /* ── Atmosfera: o lustre ─────────────────────────────────────────────────── */

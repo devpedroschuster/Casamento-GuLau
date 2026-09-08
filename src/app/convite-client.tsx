@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { confirmarPresenca, type Convite, type Perfil, type Pessoa } from "@/lib/supabase-functions";
 import QrCodeAfter from "@/components/qr-code-after";
+import Cantos from "./components/cantos";
 
 type EtapaKey = "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after";
 
@@ -111,6 +112,7 @@ function TicketCard({
 
   return (
     <div className="moldura p-5 text-left">
+      <Cantos />
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">

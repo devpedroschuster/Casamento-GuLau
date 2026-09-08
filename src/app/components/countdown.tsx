@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Cantos from "./cantos";
 
 // Contagem geral até o dia do casamento, ao meio-dia — não expõe o horário específico de cada convite.
 const DATA_CASAMENTO = process.env.NEXT_PUBLIC_DATA_CASAMENTO || "2026-11-28T12:00:00-03:00";
@@ -36,7 +37,8 @@ export default function Countdown() {
       <div className="flex justify-center gap-4 sm:gap-8">
         {itens.map((i) => (
           <div key={i.label} className="moldura px-5 py-4 min-w-[80px]">
-            <p className="font-display text-3xl text-champagne-light">{i.valor}</p>
+            <Cantos />
+            <p className="font-display text-3xl text-champagne-light brilho-palco">{i.valor}</p>
             <p className="text-[11px] tracking-widest uppercase text-platinum/60 mt-1">{i.label}</p>
           </div>
         ))}
