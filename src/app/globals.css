@@ -193,6 +193,7 @@ body {
     linear-gradient(135deg, var(--champagne-light), var(--rose-gold) 45%, var(--platinum) 75%, var(--champagne));
   background-origin: border-box;
   background-clip: padding-box, border-box;
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
 }
@@ -288,6 +289,33 @@ body {
 
 .btn-metal:disabled::after {
   animation: none;
+}
+
+/* Moldura para fotos — mesmo acabamento de joia do .moldura, com um brilho
+   extra ao redor. A "janela" interna (.foto-quadro) é quem recorta a imagem;
+   os cantos facetados ficam de fora dela e por isso nunca são cortados. */
+.moldura-foto {
+  box-shadow:
+    0 20px 60px -20px rgba(0, 0, 0, 0.6),
+    0 0 50px -12px rgba(236, 214, 164, 0.4);
+}
+
+.foto-quadro {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.foto-reservada {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+  background: radial-gradient(ellipse 90% 70% at 50% 40%, rgba(201, 162, 93, 0.22), transparent 70%);
 }
 
 .linha-metal {

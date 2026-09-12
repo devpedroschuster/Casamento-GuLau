@@ -3,7 +3,7 @@ import Cantos from "./cantos";
 const CARDS = [
   {
     titulo: "Quando",
-    texto: "28 de novembro de 2026. O horário de cada etapa depende do tipo de convite — confira ao fazer seu check-in, ao final da página.",
+    texto: "28 de novembro de 2026. Mais informações, confira ao fazer seu check-in, ao final da página.",
   },
   {
     titulo: "Onde",
@@ -30,8 +30,8 @@ export default function Informacoes() {
         {CARDS.map((c) => (
           <div key={c.titulo} className="moldura p-6">
             <Cantos />
-            <h3 className="font-display italic text-xl mb-2 text-champagne-light">{c.titulo}</h3>
-            <p className="text-platinum/80 text-sm leading-relaxed">{c.texto}</p>
+            <h3 className="font-display italic text-xl mb-2 text-champagne-light text-center">{c.titulo}</h3>
+            <p className="text-platinum/80 text-sm leading-relaxed text-center">{c.texto}</p>
           </div>
         ))}
       </div>

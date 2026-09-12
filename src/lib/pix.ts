@@ -1,6 +1,14 @@
 import { createStaticPix, hasError } from "pix-utils";
 import QRCode from "qrcode";
 
+// Dados fixos do recebedor do Pix, compartilhados por todo lugar do site que
+// gera um QR Code (pagamento do after, lista de presentes, etc).
+export const PIX_CONFIG_PADRAO = {
+  chavePix: process.env.NEXT_PUBLIC_PIX_KEY || "51999714595",
+  nomeRecebedor: process.env.NEXT_PUBLIC_PIX_NOME || "Laura e Gu",
+  cidadeRecebedor: process.env.NEXT_PUBLIC_PIX_CIDADE || "PORTO ALEGRE",
+};
+
 interface GerarPixQrCodeParams {
   chavePix: string;
   nomeRecebedor: string;

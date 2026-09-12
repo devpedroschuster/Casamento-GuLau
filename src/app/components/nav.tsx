@@ -4,6 +4,7 @@ const LINKS = [
   { href: "#historia", label: "História" },
   { href: "#informacoes", label: "Informações" },
   { href: "#como-chegar", label: "Como chegar" },
+  { href: "#presentes", label: "Presentes" },
   { href: "#checkin", label: "Confirmar presença" },
 ];
 
