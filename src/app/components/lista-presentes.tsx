@@ -11,17 +11,17 @@ const formatoReal = new Intl.NumberFormat("pt-BR", { style: "currency", currency
     quanto puder, editando o campo ao clicar em "Presentear". Ajuste o texto
     e os valores como quiser. */
 const PRESENTES = [
-  { titulo: "1 ano de mensalidade do fut do noivo", valor: 419.17 },
+  { titulo: "1 ano de mensalidade do funcional do noivo", valor: 419.17 },
   { titulo: "Ajuda para a aposentadoria dos noivos", valor: 878.83 },
   { titulo: "Ajuda para mobiliar a casa nova", valor: 1133.39 },
-  { titulo: "Ajuda para o pacote da lua de mel", valor: 692.84 },
+  { titulo: "Ajuda para lua de mel", valor: 692.84 },
   { titulo: "Diária de pet sitter durante a lua de mel", valor: 418.72 },
   { titulo: "Brinde da noite de núpcias", valor: 559.42 },
   { titulo: 'Coral para cantar "Aleluia" na entrada da noiva', valor: 839.08 },
-  { titulo: "Cota para perguntar quando vem o herdeiro", valor: 189.34 },
-  { titulo: "Cota para reclamar que não tem pagode na festa", valor: 336.25 },
+  { titulo: "Cota para perguntar quando vem o segundo herdeiro", valor: 189.34 },
+  { titulo: "Cota para reclamar que a festa para ser sem fim", valor: 336.25 },
   { titulo: "Aula de dança de salão pro padrinho desengonçado", valor: 249.9 },
-  { titulo: "Sapato novo pra não escorregar na pista de dança", valor: 310.5 },
+  { titulo: "Sapato novo pra não escorregar na pista", valor: 310.5 },
   { titulo: "Gorjeta pro DJ tocar aquela música específica", valor: 275.0 },
   { titulo: "Jantar de aniversário de 1 ano de casados", valor: 450.0 },
   { titulo: "Gasolina pro carro dos noivos", valor: 210.0 },

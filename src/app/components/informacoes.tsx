@@ -7,15 +7,15 @@ const CARDS = [
   },
   {
     titulo: "Onde",
-    texto: "Quintal dos Belgas — Estr. Fazenda Conceição, 605b, Morungava, Gravataí - RS. O local é o mesmo para cerimônia, festa e after.",
+    texto: "Quintal dos Belgas — Estr. Fazenda Conceição, 605b, Morungava, Gravataí - RS.",
   },
   {
-    titulo: "Por que esse site",
-    texto: "[Breve explicação do casal sobre o motivo de criarem um site próprio para o casamento — praticidade, organização, forma de reunir todas as informações em um só lugar.]",
+    titulo: "Esse site",
+    texto: "Criamos esse site para que possamos compartilhar informações importantes sobre nosso casamento, como a lista de presentes, detalhes do evento e outras informações úteis para vocês.",
   },
   {
     titulo: "Sua presença",
-    texto: "[Um parágrafo sobre a importância de cada convidado estar presente nesse dia — pode ser mais pessoal e emotivo.]",
+    texto: "[Um parágrafo sobre a importância de cada convidado estar presente nesse dia — pode ser mais pessoal e emotivo (se vocês quiserem)]",
   },
 ];
 
