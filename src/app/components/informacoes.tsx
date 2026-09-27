@@ -3,7 +3,8 @@ import Cantos from "./cantos";
 const CARDS = [
   {
     titulo: "Quando",
-    texto: "28 de novembro de 2026. Mais informações, confira ao fazer seu check-in, ao final da página.",
+    texto:
+      "28 de novembro de 2026, a partir das 17h. O horário das demais etapas depende do tipo de convite — confira ao fazer seu check-in, ao final da página.",
   },
   {
     titulo: "Onde",
@@ -15,7 +16,8 @@ const CARDS = [
   },
   {
     titulo: "Sua presença",
-    texto: "[Um parágrafo sobre a importância de cada convidado estar presente nesse dia — pode ser mais pessoal e emotivo (se vocês quiserem)]",
+    texto:
+      "Este convite é individual e pessoal, preparado especialmente para quem o recebeu. Pedimos que confirme sua presença até 15 de outubro — isso nos ajuda a cuidar de cada detalhe com carinho.",
   },
 ];
 

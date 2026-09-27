@@ -7,25 +7,23 @@ import Cantos from "./cantos";
 
 const formatoReal = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
-/** Cada item é só uma sugestão de valor — a pessoa pode presentear com o
-    quanto puder, editando o campo ao clicar em "Presentear". Ajuste o texto
-    e os valores como quiser. */
+/** Os 9 itens e as frases são dos próprios noivos — só os valores são
+    sugestão minha, ajustem como quiser. A pessoa pode presentear com o
+    quanto puder, editando o campo ao clicar em "Presentear". */
 const PRESENTES = [
-  { titulo: "1 ano de mensalidade do funcional do noivo", valor: 419.17 },
-  { titulo: "Ajuda para a aposentadoria dos noivos", valor: 878.83 },
-  { titulo: "Ajuda para mobiliar a casa nova", valor: 1133.39 },
-  { titulo: "Ajuda para lua de mel", valor: 692.84 },
-  { titulo: "Diária de pet sitter durante a lua de mel", valor: 418.72 },
-  { titulo: "Brinde da noite de núpcias", valor: 559.42 },
-  { titulo: 'Coral para cantar "Aleluia" na entrada da noiva', valor: 839.08 },
-  { titulo: "Cota para perguntar quando vem o segundo herdeiro", valor: 189.34 },
-  { titulo: "Cota para reclamar que a festa para ser sem fim", valor: 336.25 },
-  { titulo: "Aula de dança de salão pro padrinho desengonçado", valor: 249.9 },
-  { titulo: "Sapato novo pra não escorregar na pista", valor: 310.5 },
-  { titulo: "Gorjeta pro DJ tocar aquela música específica", valor: 275.0 },
-  { titulo: "Jantar de aniversário de 1 ano de casados", valor: 450.0 },
-  { titulo: "Gasolina pro carro dos noivos", valor: 210.0 },
-  { titulo: "Ajuda pra pagar a fatura do cartão depois da festa", valor: 560.0 },
+  { titulo: "Cabelos para as tranças do noivo", subtitulo: "Porque até um careca merece um projeto capilar.", valor: 150.0 },
+  { titulo: "Massagem para os noivos", subtitulo: "Por carregarmos o peso de fazer a melhor festa.", valor: 280.0 },
+  { titulo: "Uma noite sem cozinhar", subtitulo: "Porque amor também é pedir delivery.", valor: 120.0 },
+  { titulo: "Domingo de preguiça", subtitulo: "Investimento de longo prazo.", valor: 100.0 },
+  { titulo: "Café da manhã de hotel", subtitulo: "Porque acordar sem fazer café é luxo.", valor: 90.0 },
+  { titulo: "Um dia sem responsabilidades", subtitulo: "O presente que todo adulto merece.", valor: 200.0 },
+  { titulo: "Vale deixar a vida mais gostosa", subtitulo: "Vocês escolhem como.", valor: 250.0 },
+  { titulo: "Presente surpresa", subtitulo: "Porque vocês sabem que a gente vai amar.", valor: 180.0 },
+  {
+    titulo: "Contribuição para o nosso novo capítulo",
+    subtitulo: "Para ajudar a transformar sonhos em histórias.",
+    valor: 500.0,
+  },
 ];
 
 export default function ListaPresentes() {
@@ -36,21 +34,31 @@ export default function ListaPresentes() {
       </p>
       <h2 className="font-display italic text-3xl mb-3 text-center">Um mimo pra gente</h2>
       <p className="text-platinum/70 text-sm text-center max-w-lg mx-auto mb-12">
-        Sua presença já é o maior presente. Mas se quiser nos ajudar com algo, os valores abaixo
-        são só sugestões — dá pra presentear com o quanto puder.
+        A verdade é que vocês já estão dando o melhor presente pra gente: estar presentes nas
+        nossas vidas e nessa celebração. Mas, se ainda assim quiserem nos presentear, preparamos
+        uma lista diferente — com coisas que podem ajudar.
       </p>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {PRESENTES.map((p) => (
-          <PresenteCard key={p.titulo} titulo={p.titulo} valorSugerido={p.valor} />
+          <PresenteCard key={p.titulo} titulo={p.titulo} subtitulo={p.subtitulo} valorSugerido={p.valor} />
         ))}
       </div>
+      <p className="text-platinum/60 text-sm text-center mt-12">Muito obrigado por contribuir.</p>
     </section>
   );
 }
 
 type Estado = "fechado" | "valor" | "pix";
 
-function PresenteCard({ titulo, valorSugerido }: { titulo: string; valorSugerido: number }) {
+function PresenteCard({
+  titulo,
+  subtitulo,
+  valorSugerido,
+}: {
+  titulo: string;
+  subtitulo: string;
+  valorSugerido: number;
+}) {
   const [estado, setEstado] = useState<Estado>("fechado");
   const [valorTexto, setValorTexto] = useState(valorSugerido.toFixed(2));
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
@@ -95,7 +103,10 @@ function PresenteCard({ titulo, valorSugerido }: { titulo: string; valorSugerido
   return (
     <div className="moldura p-6 flex flex-col text-center">
       <Cantos />
-      <p className="font-display italic text-lg text-ivory flex-1">{titulo}</p>
+      <div className="flex-1">
+        <p className="font-display italic text-lg text-ivory">{titulo}</p>
+        <p className="text-platinum/60 text-xs italic mt-2">{subtitulo}</p>
+      </div>
 
       {estado === "fechado" && (
         <>
