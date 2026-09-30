@@ -26,7 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`h-full antialiased ${cormorant.variable} ${manrope.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
-        <StarField />
+        <StarField cores={["201,162,93", "236,214,164", "217,169,160", "255,241,214"]} />
         <CurtainIntro />
         {children}
       </body>

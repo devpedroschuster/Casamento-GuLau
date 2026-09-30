@@ -72,9 +72,11 @@ type Poeira = { x: number; y: number; r: number; cor: string; fase: number; vel:
 export default function StarField({
   className = "star-field",
   sempreAtivo = false,
+  cores = CORES,
 }: {
   className?: string;
   sempreAtivo?: boolean;
+  cores?: string[];
 }) {
   const pathname = usePathname();
   const ref = useRef<HTMLCanvasElement>(null);
@@ -86,7 +88,7 @@ export default function StarField({
     const ctx = cv?.getContext("2d");
     if (!cv || !ctx) return;
 
-    const sprites = CORES.map(criarSprite);
+    const sprites = cores.map(criarSprite);
     let estrelas: Estrela[] = [];
     let poeirinha: Poeira[] = [];
     let quadro = 0;
@@ -109,7 +111,7 @@ export default function StarField({
           y: Math.random() * innerHeight,
           // poucas grandes, muitas pequenas
           t: 8 + Math.pow(Math.random(), 2.6) * 40,
-          s: (Math.random() * CORES.length) | 0,
+          s: (Math.random() * cores.length) | 0,
           fase: Math.random() * Math.PI * 2,
           vel: 0.55 + Math.random() * 1.5,
           deriva: 0.02 + Math.random() * 0.09,
@@ -123,7 +125,7 @@ export default function StarField({
           x: Math.random() * innerWidth,
           y: Math.random() * innerHeight,
           r: Math.random() * 1.1 + 0.35,
-          cor: CORES[(Math.random() * CORES.length) | 0],
+          cor: cores[(Math.random() * cores.length) | 0],
           fase: Math.random() * Math.PI * 2,
           vel: 0.7 + Math.random() * 2.1,
         });
@@ -165,7 +167,7 @@ export default function StarField({
       cancelAnimationFrame(quadro);
       removeEventListener("resize", dimensionar);
     };
-  }, [pathname, sempreAtivo]);
+  }, [pathname, sempreAtivo, cores]);
 
   return <canvas className={className} ref={ref} aria-hidden="true" />;
 }

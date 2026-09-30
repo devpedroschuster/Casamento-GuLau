@@ -52,7 +52,7 @@ export default function ConviteClient({
         ))}
       </div>
 
-      <button onClick={onTrocarNome} className="text-sm text-platinum/70 underline underline-offset-2 hover:text-champagne-light transition">
+      <button onClick={onTrocarNome} className="text-sm text-platinum/70 underline underline-offset-2 hover:text-champagne transition">
         Não é você? Buscar outro nome
       </button>
     </div>
@@ -116,7 +116,7 @@ function TicketCard({
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-display italic text-lg text-champagne-light">{etapa.label}</h3>
+            <h3 className="font-display italic text-lg text-champagne">{etapa.label}</h3>
             {etapa.pago && (
               <span className="text-[10px] tracking-widest uppercase text-rose-gold border border-rose-gold/40 rounded-sm px-2 py-0.5">
                 Pago
@@ -128,7 +128,7 @@ function TicketCard({
 
         <div className="shrink-0">
           {jaConfirmou && (
-            <span className="text-[11px] tracking-widest uppercase text-champagne-light">Confirmado</span>
+            <span className="text-[11px] tracking-widest uppercase text-champagne">Confirmado</span>
           )}
           {jaRecusou && (
             <span className="text-[11px] tracking-widest uppercase text-platinum/50">Não vai</span>
@@ -160,7 +160,11 @@ function TicketCard({
       </div>
 
       {etapa.pago && jaConfirmou && (
-        <div className="mt-4">
+        <div className="mt-4 space-y-4">
+          <div className="text-center space-y-1">
+            <p className="font-display italic text-lg text-champagne">Sua presença está confirmada...</p>
+            <p className="text-platinum/70 text-xs uppercase tracking-widest">mas ainda não acabou</p>
+          </div>
           <QrCodeAfter slug={pessoa.id} valor={pessoa.valor_after} />
         </div>
       )}

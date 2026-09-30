@@ -23,7 +23,7 @@ export default function FotoDestaque() {
             />
           ) : (
             <div className="foto-reservada">
-              <p className="font-display italic text-4xl text-champagne-light brilho-palco">
+              <p className="font-display italic text-4xl text-champagne brilho-palco">
                 Laura <span className="text-ivory">&amp;</span> Gu
               </p>
               <Filete className="w-16" />

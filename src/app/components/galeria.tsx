@@ -30,7 +30,7 @@ export default function Galeria() {
                 />
               ) : (
                 <div className="foto-reservada">
-                  <svg viewBox="0 0 16 16" className="w-5 h-5 text-champagne-light/70" fill="currentColor" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" className="w-5 h-5 text-champagne/70" fill="currentColor" aria-hidden="true">
                     <path d="M8 0 L9.2 6.8 L16 8 L9.2 9.2 L8 16 L6.8 9.2 L0 8 L6.8 6.8Z" />
                   </svg>
                 </div>

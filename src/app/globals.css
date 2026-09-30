@@ -7,10 +7,16 @@
   --champagne-light: #ecd6a4;
   --rose-gold: #d9a9a0;
   --rose-gold-light: #f1d9c9;
-  --platinum: #c7cdd6;
-  --ivory: #f6f1e8;
+  /* Variante creme/dourado: os mesmos nomes de token do site escuro, só que
+     invertidos — --creme vira o fundo dominante, --ivory e --platinum passam
+     a ser tons quentes escuros (texto), em vez de tons claros (que eram texto
+     sobre fundo escuro). --onyx continua escuro de propósito: ainda é usado
+     como texto sobre superfícies claras (botão dourado, cards). */
+  --platinum: #8a7355;
+  --ivory: #3a2a18;
+  --creme: #f8f1e2;
 
-  --background: var(--onyx);
+  --background: var(--creme);
   --foreground: var(--ivory);
 
   --font-display: var(--font-cormorant);
@@ -26,6 +32,7 @@
   --color-rose-gold-light: var(--rose-gold-light);
   --color-platinum: var(--platinum);
   --color-ivory: var(--ivory);
+  --color-creme: var(--creme);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-display: var(--font-display);
@@ -165,6 +172,43 @@ body {
   transform: translateX(100%);
 }
 
+/* Capa de entrada — a imagem "L&G" dos noivos com um botão para entrar,
+   antes da cortina abrir (ver CurtainIntro). */
+.cortina-capa {
+  position: fixed;
+  inset: 0;
+  z-index: 51;
+  overflow: hidden;
+}
+
+.cortina-capa-veu {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 45%, rgba(20, 12, 6, 0.6) 100%);
+}
+
+.cortina-capa-botao {
+  position: absolute;
+  left: 50%;
+  bottom: 9%;
+  transform: translateX(-50%);
+  padding: 14px 42px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 40px;
+  background: rgba(20, 12, 6, 0.45);
+  color: #fff;
+  letter-spacing: 4px;
+  font-size: 13px;
+  text-transform: uppercase;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.cortina-capa-botao:hover {
+  background: rgba(20, 12, 6, 0.6);
+}
+
 .secao {
   position: relative;
   z-index: 1;
@@ -180,7 +224,7 @@ body {
 }
 
 .fundo-platinum {
-  background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(199, 205, 214, 0.09), transparent 65%);
+  background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(138, 115, 85, 0.1), transparent 65%);
 }
 
 /* Moldura facetada — agora translúcida, deixa o brilho de fundo aparecer por trás dos cards */
@@ -189,13 +233,13 @@ body {
   border-radius: 4px;
   border: 1px solid transparent;
   background-image:
-    linear-gradient(rgba(30, 23, 32, 0.82), rgba(30, 23, 32, 0.82)),
-    linear-gradient(135deg, var(--champagne-light), var(--rose-gold) 45%, var(--platinum) 75%, var(--champagne));
+    linear-gradient(rgba(248, 241, 226, 0.72), rgba(248, 241, 226, 0.72)),
+    linear-gradient(135deg, var(--champagne-light), var(--rose-gold) 45%, var(--champagne-light) 75%, var(--champagne));
   background-origin: border-box;
   background-clip: padding-box, border-box;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
-  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+  box-shadow: 0 20px 45px -20px rgba(120, 90, 40, 0.35);
 }
 
 /* Cantos facetados — quatro elementos (ver Cantos), no espírito dos cantos do
@@ -208,7 +252,7 @@ body {
   background: linear-gradient(135deg, var(--champagne-light), var(--rose-gold));
   transform: rotate(45deg);
   pointer-events: none;
-  filter: drop-shadow(0 0 4px rgba(236, 214, 164, 0.6));
+  filter: drop-shadow(0 1px 3px rgba(120, 90, 40, 0.55));
 }
 
 .canto-facetado:nth-of-type(1) { top: -4px; left: -4px; }
@@ -228,7 +272,7 @@ body {
   position: absolute;
   inset: -35% -25%;
   z-index: -1;
-  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(236, 214, 164, 0.35), transparent 70%);
+  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(201, 162, 93, 0.45), transparent 70%);
   filter: blur(6px);
   animation: spot-respirar 4.5s ease-in-out infinite;
 }
@@ -249,10 +293,11 @@ body {
 }
 
 .eyebrow-metal {
-  background: linear-gradient(90deg, var(--platinum), var(--champagne-light), var(--rose-gold-light));
+  background: linear-gradient(90deg, var(--platinum), var(--champagne) 55%, var(--rose-gold));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(60, 40, 20, 0.35)) drop-shadow(0 1px 8px rgba(60, 40, 20, 0.2));
 }
 
 .btn-metal {
@@ -296,8 +341,8 @@ body {
    os cantos facetados ficam de fora dela e por isso nunca são cortados. */
 .moldura-foto {
   box-shadow:
-    0 20px 60px -20px rgba(0, 0, 0, 0.6),
-    0 0 50px -12px rgba(236, 214, 164, 0.4);
+    0 20px 60px -20px rgba(120, 90, 40, 0.4),
+    0 0 50px -12px rgba(201, 162, 93, 0.4);
 }
 
 .foto-quadro {
@@ -318,8 +363,48 @@ body {
   background: radial-gradient(ellipse 90% 70% at 50% 40%, rgba(201, 162, 93, 0.22), transparent 70%);
 }
 
+/* Reforço de leitura pra texto solto direto sobre foto (sem card por baixo) */
+.texto-com-sombra {
+  text-shadow: 0 1px 2px rgba(60, 40, 20, 0.3), 0 1px 10px rgba(60, 40, 20, 0.18);
+}
+
+/* Painel frosted suave — pra blocos de parágrafo mais longos, quando a foto
+   por trás tem gente/objetos demais pra uma sombra de texto dar conta
+   sozinha. Sem borda/cantos do .moldura, só uma base calma de leitura. */
+.painel-texto {
+  background: rgba(248, 241, 226, 0.68);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 1.75rem 1.5rem;
+}
+
 .linha-metal {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--champagne), var(--rose-gold), transparent);
   border: none;
+}
+
+/* Fundo fotográfico de seção (ver FundoFoto) — a foto fica full-bleed atrás
+   do conteúdo, com um véu creme translúcido por cima para o texto continuar
+   legível independente do brilho da foto embaixo. */
+.fundo-foto-camada {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Fotos já limpas (sem texto/QR) — o véu aqui é só uma leve pitada de creme
+   pra manter o texto legível e emendar com o resto da página, não pra
+   esconder a imagem. */
+.fundo-foto-veu {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 241, 226, 0.3) 0%,
+    rgba(248, 241, 226, 0.08) 22%,
+    rgba(248, 241, 226, 0.12) 55%,
+    rgba(248, 241, 226, 0.55) 100%
+  );
 }

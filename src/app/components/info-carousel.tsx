@@ -74,7 +74,7 @@ export default function InfoCarousel({
       </div>
 
       <div className="space-y-4">
-        <h3 className="font-display italic text-2xl text-champagne-light text-center">{slide.titulo}</h3>
+        <h3 className="font-display italic text-2xl text-champagne text-center">{slide.titulo}</h3>
         <dl className="space-y-3 text-sm">
           <div>
             <dt className="text-[11px] tracking-widest uppercase text-platinum/50">Horário</dt>

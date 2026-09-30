@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { gerarPixQrCode, PIX_CONFIG_PADRAO } from "@/lib/pix";
+import { gerarPixQrCode, PIX_CONFIG_PADRAO, CHAVE_PIX_AFTER } from "@/lib/pix";
 import { copiarTexto } from "@/lib/clipboard";
 
 // Valor padrão do after, usado caso a pessoa não tenha um valor específico no banco.
@@ -22,6 +22,7 @@ export default function QrCodeAfter({ slug, valor }: { slug: string; valor: numb
     }
     gerarPixQrCode({
       ...PIX_CONFIG_PADRAO,
+      chavePix: CHAVE_PIX_AFTER,
       valor: valorFinal,
       identificador: slug,
     })
@@ -42,7 +43,7 @@ export default function QrCodeAfter({ slug, valor }: { slug: string; valor: numb
   }
 
   return (
-    <div className="rounded-sm border border-champagne/30 p-4 bg-ivory space-y-3">
+    <div className="rounded-sm border border-champagne/30 p-4 bg-[#fffaf0] space-y-3">
       <p className="font-medium text-onyx">Pagamento do After</p>
       <p className="text-sm text-onyx/70">
         No computador, escaneie o QR Code. No celular, copie o código Pix e cole no app do seu

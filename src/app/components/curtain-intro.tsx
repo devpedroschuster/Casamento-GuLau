@@ -1,20 +1,24 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
-type Fase = "fechado" | "abrindo" | "saindo" | null;
+type Fase = "capa" | "fechado" | "abrindo" | "saindo" | null;
 
 const CHAVE_SESSAO = "cortina-vista";
 
-/** Abertura de palco que roda uma vez por sessão ao entrar no site: a cortina
-    parte ao meio, o spotlight acende e um casal em silhueta valsa por um
-    instante antes de sumir — depois disso o visitante nunca mais vê. Não
-    aparece na convocação dos padrinhos, que tem a própria abertura (o lacre),
-    nem para quem prefere menos movimento. */
+/** Abertura de palco que roda uma vez por sessão ao entrar no site: primeiro a
+    capa com a imagem "L&G" dos noivos e um botão para entrar (mais
+    interativo do que abrir sozinho); ao clicar, a cortina fecha, o spotlight
+    acende e um casal em silhueta valsa por um instante antes de sumir —
+    depois disso o visitante nunca mais vê. Não aparece na convocação dos
+    padrinhos, que tem a própria abertura (o lacre), nem para quem prefere
+    menos movimento (aí pula direto pro site). */
 export default function CurtainIntro() {
   const pathname = usePathname();
-  const [fase, setFase] = useState<Fase>("fechado");
+  const [fase, setFase] = useState<Fase>(null);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     if (pathname?.startsWith("/padrinhos")) {
@@ -29,19 +33,37 @@ export default function CurtainIntro() {
       return;
     }
 
-    sessionStorage.setItem(CHAVE_SESSAO, "1");
-    const t1 = setTimeout(() => setFase("abrindo"), 30);
-    const t2 = setTimeout(() => setFase("saindo"), 2600);
-    const t3 = setTimeout(() => setFase(null), 3200);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+    setFase("capa");
   }, [pathname]);
 
+  useEffect(() => {
+    const idsParaLimpar = timers.current;
+    return () => {
+      idsParaLimpar.forEach(clearTimeout);
+    };
+  }, []);
+
+  function entrar() {
+    sessionStorage.setItem(CHAVE_SESSAO, "1");
+    setFase("fechado");
+    timers.current.push(setTimeout(() => setFase("abrindo"), 30));
+    timers.current.push(setTimeout(() => setFase("saindo"), 2600));
+    timers.current.push(setTimeout(() => setFase(null), 3200));
+  }
+
   if (fase === null) return null;
+
+  if (fase === "capa") {
+    return (
+      <div className="cortina-capa">
+        <Image src="/dourado/hero.png" alt="" fill priority className="object-cover" />
+        <div className="cortina-capa-veu" />
+        <button type="button" onClick={entrar} className="cortina-capa-botao">
+          Entrar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={`cortina-intro ${fase === "abrindo" ? "abrindo" : ""} ${fase === "saindo" ? "saindo" : ""}`} aria-hidden="true">
