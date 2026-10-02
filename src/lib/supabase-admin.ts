@@ -66,6 +66,12 @@ export async function criarConviteAdmin(params: {
     .select(COLUNAS_CONVIDADO);
 
   if (convidadosError) {
+    // Desfaz o convite recém-criado para não deixar um grupo vazio órfão
+    // (os convidados já inseridos, se houver, caem junto via ON DELETE CASCADE).
+    const { error: rollbackError } = await supabase.from("convites").delete().eq("id", convite.id);
+    if (rollbackError) {
+      console.error("Falha ao desfazer o convite " + convite.id + ": " + rollbackError.message);
+    }
     throw new Error("Erro ao criar convidados: " + convidadosError.message);
   }
 
