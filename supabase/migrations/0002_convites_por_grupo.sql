@@ -37,8 +37,9 @@ create table convidados (
 
 create index idx_convidados_convite_id on convidados (convite_id);
 
--- Índice funcional para acelerar a busca por nome normalizado (sem acento, minúsculo)
-create index idx_convidados_nome_normalizado on convidados (lower(unaccent(nome)));
+-- Sem índice funcional em lower(unaccent(nome)): unaccent() não é IMMUTABLE (o
+-- Postgres recusa a criação) e, de todo modo, um índice btree não ajuda numa
+-- busca "contém" (ilike '%termo%') — a lista de convidados é pequena.
 
 -- RLS ligado, sem policies: client anon é bloqueado direto na tabela.
 -- Toda leitura/escrita passa pelas Edge Functions (service role key).
@@ -55,7 +56,7 @@ returns table (convite_id uuid)
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select distinct c.convite_id
   from convidados c
