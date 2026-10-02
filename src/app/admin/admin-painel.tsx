@@ -65,9 +65,7 @@ export default function AdminPainel() {
   const [enviando, setEnviando] = useState(false);
   const [erroFormulario, setErroFormulario] = useState<string | null>(null);
 
-  function carregarLista() {
-    setCarregando(true);
-    setErroLista(null);
+  function buscarLista() {
     fetch("/api/admin/convites")
       .then((res) => res.json())
       .then((data) => {
@@ -79,8 +77,14 @@ export default function AdminPainel() {
   }
 
   useEffect(() => {
-    carregarLista();
+    buscarLista();
   }, []);
+
+  function handleTentarDeNovo() {
+    setCarregando(true);
+    setErroLista(null);
+    buscarLista();
+  }
 
   function handleNomeChange(indice: number, valor: string) {
     setNomes((atual) => atual.map((n, i) => (i === indice ? valor : n)));
@@ -190,7 +194,7 @@ export default function AdminPainel() {
         {erroLista && (
           <div className="space-y-2">
             <p className="text-rose-gold text-sm">{erroLista}</p>
-            <button onClick={carregarLista} className="text-sm text-champagne hover:underline">
+            <button onClick={handleTentarDeNovo} className="text-sm text-champagne hover:underline">
               Tentar de novo
             </button>
           </div>
