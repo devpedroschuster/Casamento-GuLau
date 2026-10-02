@@ -13,15 +13,15 @@ const CHAVE_SESSAO = "cortina-vista";
     interativo do que abrir sozinho); ao clicar, a cortina fecha, o spotlight
     acende e um casal em silhueta valsa por um instante antes de sumir —
     depois disso o visitante nunca mais vê. Não aparece na convocação dos
-    padrinhos, que tem a própria abertura (o lacre), nem para quem prefere
-    menos movimento (aí pula direto pro site). */
+    padrinhos, que tem a própria abertura (o lacre), no painel /admin, nem
+    para quem prefere menos movimento (aí pula direto pro site). */
 export default function CurtainIntro() {
   const pathname = usePathname();
   const [fase, setFase] = useState<Fase>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    if (pathname?.startsWith("/padrinhos")) {
+    if (pathname?.startsWith("/padrinhos") || pathname?.startsWith("/admin")) {
       setFase(null);
       return;
     }

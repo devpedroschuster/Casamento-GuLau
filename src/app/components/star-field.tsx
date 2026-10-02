@@ -82,7 +82,7 @@ export default function StarField({
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!sempreAtivo && pathname?.startsWith("/padrinhos")) return;
+    if (!sempreAtivo && (pathname?.startsWith("/padrinhos") || pathname?.startsWith("/admin"))) return;
 
     const cv = ref.current;
     const ctx = cv?.getContext("2d");
