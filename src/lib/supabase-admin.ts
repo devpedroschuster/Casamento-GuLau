@@ -1,0 +1,73 @@
+// Usa a service role key do Supabase — só pode ser importado por código que
+// roda no servidor (Route Handlers do App Router). Nunca importe este
+// arquivo de um componente "use client": a chave nunca pode chegar ao
+// navegador.
+import { createClient } from "@supabase/supabase-js";
+import type { Perfil, Pessoa } from "@/lib/supabase-functions";
+
+export interface ConviteAdmin {
+  id: string;
+  nome_exibicao: string;
+  perfil: Perfil;
+  criado_em: string;
+  convidados: Pessoa[];
+}
+
+function criarClienteAdmin() {
+  const url = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceRoleKey) {
+    throw new Error("SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar definidos no servidor");
+  }
+
+  return createClient(url, serviceRoleKey);
+}
+
+const COLUNAS_CONVIDADO =
+  "id, nome, checkin_em, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em";
+
+export async function listarConvitesAdmin(): Promise<ConviteAdmin[]> {
+  const supabase = criarClienteAdmin();
+
+  const { data, error } = await supabase
+    .from("convites")
+    .select(`id, nome_exibicao, perfil, criado_em, convidados (${COLUNAS_CONVIDADO})`)
+    .order("criado_em", { ascending: false })
+    .order("nome", { foreignTable: "convidados" });
+
+  if (error) {
+    throw new Error("Erro ao listar convites: " + error.message);
+  }
+
+  return (data ?? []) as unknown as ConviteAdmin[];
+}
+
+export async function criarConviteAdmin(params: {
+  nome_exibicao: string;
+  perfil: Perfil;
+  nomes: string[];
+}): Promise<ConviteAdmin> {
+  const supabase = criarClienteAdmin();
+
+  const { data: convite, error: conviteError } = await supabase
+    .from("convites")
+    .insert({ nome_exibicao: params.nome_exibicao, perfil: params.perfil })
+    .select("id, nome_exibicao, perfil, criado_em")
+    .single();
+
+  if (conviteError || !convite) {
+    throw new Error("Erro ao criar convite: " + conviteError?.message);
+  }
+
+  const { data: convidados, error: convidadosError } = await supabase
+    .from("convidados")
+    .insert(params.nomes.map((nome) => ({ convite_id: convite.id, nome })))
+    .select(COLUNAS_CONVIDADO);
+
+  if (convidadosError) {
+    throw new Error("Erro ao criar convidados: " + convidadosError.message);
+  }
+
+  return { ...convite, convidados: (convidados ?? []) as unknown as Pessoa[] };
+}
