@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
       .update(update)
       .eq("id", convidado_id)
       .select(
-        "id, nome, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
+        "id, nome, checkin_em, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
       )
       .single();
 
