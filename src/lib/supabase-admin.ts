@@ -2,6 +2,7 @@
 // roda no servidor (Route Handlers do App Router). Nunca importe este
 // arquivo de um componente "use client": a chave nunca pode chegar ao
 // navegador.
+import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import type { Perfil, Pessoa } from "@/lib/supabase-functions";
 
@@ -21,7 +22,43 @@ function criarClienteAdmin() {
     throw new Error("SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar definidos no servidor");
   }
 
-  return createClient(url, serviceRoleKey);
+  return createClient(url, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+// Mesma normalização da busca pública (buscar-convite): sem acento, minúsculo,
+// espaços colapsados. Usada para detectar nomes que tornariam a busca ambígua.
+export function normalizarNome(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export async function listarNomesExistentes(): Promise<{ nome: string; grupo: string }[]> {
+  const supabase = criarClienteAdmin();
+
+  const { data, error } = await supabase
+    .from("convidados")
+    .select("nome, convites(nome_exibicao)")
+    .limit(5000);
+
+  if (error) {
+    throw new Error("Erro ao listar nomes existentes: " + error.message);
+  }
+
+  type Linha = {
+    nome: string;
+    convites: { nome_exibicao: string } | { nome_exibicao: string }[] | null;
+  };
+
+  return ((data ?? []) as unknown as Linha[]).map((linha) => {
+    const convite = Array.isArray(linha.convites) ? linha.convites[0] : linha.convites;
+    return { nome: linha.nome, grupo: convite?.nome_exibicao ?? "" };
+  });
 }
 
 const COLUNAS_CONVIDADO =
@@ -34,7 +71,7 @@ export async function listarConvitesAdmin(): Promise<ConviteAdmin[]> {
     .from("convites")
     .select(`id, nome_exibicao, perfil, criado_em, convidados (${COLUNAS_CONVIDADO})`)
     .order("criado_em", { ascending: false })
-    .order("nome", { foreignTable: "convidados" });
+    .order("nome", { referencedTable: "convidados" });
 
   if (error) {
     throw new Error("Erro ao listar convites: " + error.message);
