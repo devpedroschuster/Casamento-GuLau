@@ -1,15 +1,29 @@
 -- Convite de Casamento Laura & Gu
+-- ============================================================================
+-- ATENÇÃO — ESTA MIGRAÇÃO JÁ FOI APLICADA EM PRODUÇÃO (em 2026-10-03, junto com
+-- a 0003_checkin_convidados.sql). NÃO RODE DE NOVO.
+-- Qualquer nova alteração no banco deve ir em uma migração nova: 0004 ou
+-- posterior. Não edite este arquivo para mudar o schema.
+-- ============================================================================
+--
 -- Migração para o modelo "1 link único" (estilo i.casei):
 -- não existe mais slug individual. A busca é feita digitando o nome
 -- (texto normalizado: sem acento, minúsculo, "contém").
---
--- ATENÇÃO: este script derruba a tabela antiga "convidados" (baseada em slug).
--- Só rode se ainda não há confirmações reais em produção que você precise preservar.
--- Se já tiver dados reais, me avise antes de rodar — dá pra migrar em vez de derrubar.
 
 create extension if not exists unaccent;
 
-drop table if exists convidados cascade;
+-- Derruba só a tabela ANTIGA "convidados" (a baseada em slug). Se a tabela já
+-- for a nova (sem coluna slug), não faz nada — assim um re-run acidental não
+-- apaga os convidados cadastrados.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'convidados' and column_name = 'slug'
+  ) then
+    drop table convidados cascade;
+  end if;
+end $$;
 
 create table convites (
   id uuid primary key default gen_random_uuid(),
