@@ -43,8 +43,16 @@ const ETAPAS_POR_PERFIL: Record<Perfil, { chave: ChaveConfirmacao; label: string
 function formatarCheckin(iso: string | null) {
   if (!iso) return "Ainda não";
   const data = new Date(iso);
-  const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-  const hora = data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const dia = data.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  });
+  const hora = data.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  });
   return `Fez check-in em ${dia} às ${hora}`;
 }
 
@@ -98,6 +106,8 @@ export default function AdminPainel() {
     setNomes((atual) => atual.filter((_, i) => i !== indice));
   }
 
+  const podeEnviar = nomeExibicao.trim().length > 0 && nomes.some((n) => n.trim().length > 0);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setEnviando(true);
@@ -134,6 +144,7 @@ export default function AdminPainel() {
           <label className="text-sm text-platinum/80">Nome do grupo</label>
           <input
             type="text"
+            required
             value={nomeExibicao}
             onChange={(e) => setNomeExibicao(e.target.value)}
             placeholder="Ex: Pedro Schuster e Aléxia Chaves"
@@ -182,7 +193,11 @@ export default function AdminPainel() {
 
         {erroFormulario && <p className="text-rose-gold text-sm">{erroFormulario}</p>}
 
-        <button type="submit" disabled={enviando} className="btn-metal px-6 py-2 rounded-sm tracking-wide">
+        <button
+          type="submit"
+          disabled={enviando || !podeEnviar}
+          className="btn-metal px-6 py-2 rounded-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {enviando ? "Salvando..." : "Cadastrar grupo"}
         </button>
       </form>
@@ -214,10 +229,10 @@ export default function AdminPainel() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-platinum/60">
-                  <th className="font-normal pb-2">Pessoa</th>
-                  <th className="font-normal pb-2">Check-in</th>
+                  <th className="font-normal pb-2 pr-4">Pessoa</th>
+                  <th className="font-normal pb-2 pr-4">Check-in</th>
                   {ETAPAS_POR_PERFIL[convite.perfil].map((etapa) => (
-                    <th key={etapa.label} className="font-normal pb-2">
+                    <th key={etapa.label} className="font-normal pb-2 pr-4">
                       {etapa.label}
                     </th>
                   ))}
@@ -226,11 +241,16 @@ export default function AdminPainel() {
               <tbody>
                 {convite.convidados.map((pessoa) => (
                   <tr key={pessoa.id} className="border-t border-champagne/10">
-                    <td className="py-2">{pessoa.nome}</td>
-                    <td className="py-2">{formatarCheckin(pessoa.checkin_em)}</td>
+                    <td className="py-2 pr-4">{pessoa.nome}</td>
+                    <td className="py-2 pr-4">{formatarCheckin(pessoa.checkin_em)}</td>
                     {ETAPAS_POR_PERFIL[convite.perfil].map((etapa) => (
-                      <td key={etapa.label} className="py-2">
+                      <td key={etapa.label} className="py-2 pr-4">
                         {simboloConfirmacao(pessoa[etapa.chave])}
+                        {etapa.chave === "confirmou_after" &&
+                          (pessoa.status_pagamento_after === "pendente" ||
+                            pessoa.status_pagamento_after === "pago") && (
+                            <span className="text-xs text-platinum/60"> · {pessoa.status_pagamento_after}</span>
+                          )}
                       </td>
                     ))}
                   </tr>
