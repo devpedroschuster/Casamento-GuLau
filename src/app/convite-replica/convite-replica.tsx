@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import "./convite-replica.css";
+import type { Convite } from "@/lib/supabase-functions";
+import CapaEntrada from "./capa-entrada";
 import Foto from "./foto";
 import { PRESENTES_TOPO, type AreaClicavel, type Luz } from "./dados";
-import { VERSAO_PRIMEIRO_HORARIO, type Imagem } from "./versoes";
+import { VERSAO_PRIMEIRO_HORARIO, versaoDoPerfil, type Imagem } from "./versoes";
 
 const CAPA: Imagem = {
   src: "/convite/capa.jpg",
@@ -82,7 +84,7 @@ function Luzes({ luzes, classe }: { luzes: Luz[]; classe: string }) {
 }
 
 export default function ConviteReplica() {
-  const [aberto, setAberto] = useState(false);
+  const [convite, setConvite] = useState<Convite | null>(null);
   const [atual, setAtual] = useState(0);
   const [agora, setAgora] = useState<number | null>(null);
   const [afterAberto, setAfterAberto] = useState(false);
@@ -92,7 +94,10 @@ export default function ConviteReplica() {
   const [areaPix, setAreaPix] = useState<CSSProperties>({});
   const [after2Carregada, setAfter2Carregada] = useState(false);
 
-  const versao = VERSAO_PRIMEIRO_HORARIO;
+  // Antes de entrar, o site (oculto) usa a versão do primeiro horário, então as
+  // imagens já carregam durante a capa, como no original.
+  const aberto = convite !== null;
+  const versao = convite ? versaoDoPerfil(convite.perfil) : VERSAO_PRIMEIRO_HORARIO;
   const totalTelas = versao.telas.length;
   const alvoContagem = new Date(versao.alvoContagem).getTime();
 
@@ -244,9 +249,7 @@ export default function ConviteReplica() {
               />
             </svg>
           </div>
-          <button type="button" className="rc-entrar" onClick={() => setAberto(true)}>
-            ENTRAR
-          </button>
+          <CapaEntrada aoEntrar={setConvite} />
         </div>
       )}
 
