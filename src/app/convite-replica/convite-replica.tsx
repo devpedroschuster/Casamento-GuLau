@@ -1,28 +1,23 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import "./convite-replica.css";
-import {
-  AREAS_INDICACOES,
-  AREAS_MAPA,
-  LUZES_ABERTURA,
-  LUZES_DRESS,
-  PIX_AFTER,
-  PRESENTES,
-  PRESENTES_TOPO,
-  type AreaClicavel,
-  type Luz,
-} from "./dados";
+import Foto from "./foto";
+import { PRESENTES_TOPO, type AreaClicavel, type Luz } from "./dados";
+import { VERSAO_PRIMEIRO_HORARIO, type Imagem } from "./versoes";
 
-const TOTAL_TELAS = 7;
-const ALVO_CONTAGEM = new Date("2026-11-28T17:00:00-03:00").getTime();
+const CAPA: Imagem = {
+  src: "/convite/capa.jpg",
+  largura: 864,
+  altura: 1536,
+  alt: "Laura e Gustavo — O Casamento",
+};
 
 /** Qual das duas imagens do After está visível (a outra fica apagada). */
 type AfterAtivo = "nenhum" | "primeiro" | "segundo";
 
-function formatarContagem(agora: number | null) {
-  let diff = agora === null ? 0 : Math.max(0, ALVO_CONTAGEM - agora);
+function formatarContagem(agora: number | null, alvo: number) {
+  let diff = agora === null ? 0 : Math.max(0, alvo - agora);
   const dias = Math.floor(diff / 86400000);
   diff %= 86400000;
   const horas = Math.floor(diff / 3600000);
@@ -49,38 +44,6 @@ async function copiarTexto(texto: string) {
     }
     campo.remove();
   }
-}
-
-function Foto({
-  src,
-  alt,
-  largura = 1024,
-  altura = 1536,
-  prioridade = false,
-  imgRef,
-  aoCarregar,
-}: {
-  src: string;
-  alt: string;
-  largura?: number;
-  altura?: number;
-  prioridade?: boolean;
-  imgRef?: React.Ref<HTMLImageElement>;
-  aoCarregar?: () => void;
-}) {
-  return (
-    <Image
-      ref={imgRef}
-      src={src}
-      alt={alt}
-      width={largura}
-      height={altura}
-      unoptimized
-      preload={prioridade}
-      loading={prioridade ? undefined : "eager"}
-      onLoad={aoCarregar}
-    />
-  );
 }
 
 function Area({ area }: { area: AreaClicavel }) {
@@ -128,6 +91,10 @@ export default function ConviteReplica() {
   const [statusPix, setStatusPix] = useState("");
   const [areaPix, setAreaPix] = useState<CSSProperties>({});
   const [after2Carregada, setAfter2Carregada] = useState(false);
+
+  const versao = VERSAO_PRIMEIRO_HORARIO;
+  const totalTelas = versao.telas.length;
+  const alvoContagem = new Date(versao.alvoContagem).getTime();
 
   const telas = useRef<(HTMLElement | null)[]>([]);
   const imgAfter2 = useRef<HTMLImageElement | null>(null);
@@ -222,7 +189,7 @@ export default function ConviteReplica() {
   }, [presente]);
 
   function ir(n: number) {
-    const novo = Math.max(0, Math.min(TOTAL_TELAS - 1, n));
+    const novo = Math.max(0, Math.min(totalTelas - 1, n));
     setAtual(novo);
     telas.current[novo]?.scrollIntoView({ behavior: "smooth" });
   }
@@ -256,12 +223,12 @@ export default function ConviteReplica() {
   function abrirPresente(indice: number) {
     setPresente(indice);
     setStatusPix("");
-    const pix = PRESENTES[indice].pix;
+    const pix = versao.presentes[indice].pix;
     setTimeout(() => copiarPresente(pix), 60);
   }
 
-  const [dias, horas, minutos, segundos] = formatarContagem(agora);
-  const dadosPresente = presente === null ? null : PRESENTES[presente];
+  const [dias, horas, minutos, segundos] = formatarContagem(agora, alvoContagem);
+  const dadosPresente = presente === null ? null : versao.presentes[presente];
   const classeSite = aberto ? " rc-visivel" : "";
 
   return (
@@ -269,13 +236,7 @@ export default function ConviteReplica() {
       {!aberto && (
         <div className="rc-capa">
           <div className="rc-capa-moldura">
-            <Foto
-              src="/convite/capa.jpg"
-              alt="Laura e Gustavo — O Casamento"
-              largura={864}
-              altura={1536}
-              prioridade
-            />
+            <Foto imagem={CAPA} prioridade />
             <svg className="rc-energia" viewBox="0 0 864 1536" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
               <path
                 className="rc-nuvem"
@@ -290,64 +251,47 @@ export default function ConviteReplica() {
       )}
 
       <div className={`rc-site${classeSite}`}>
-        <section className="rc-pagina rc-abertura" ref={(el) => { telas.current[0] = el; }}>
-          <Foto src="/convite/01-abertura.png" alt="Página 1" />
-          <Luzes luzes={LUZES_ABERTURA} classe="rc-luz-abertura" />
-        </section>
-
-        <section className="rc-pagina" ref={(el) => { telas.current[1] = el; }}>
-          <div className="rc-contagem" role="timer" aria-label="Contagem regressiva para o casamento">
-            {[dias, horas, minutos, segundos].map((valor, i) => (
-              <div className="rc-celula" key={i}>
-                <span>{valor}</span>
+        {versao.telas.map((tela, i) => (
+          <section
+            key={tela.imagem.src}
+            className={`rc-pagina${tela.classe ? ` ${tela.classe}` : ""}`}
+            ref={(el) => {
+              telas.current[i] = el;
+            }}
+          >
+            {tela.luzes && <Luzes luzes={tela.luzes.luzes} classe={tela.luzes.classe} />}
+            {tela.contagem && (
+              <div className="rc-contagem" role="timer" aria-label="Contagem regressiva para o casamento">
+                {[dias, horas, minutos, segundos].map((valor, k) => (
+                  <div className="rc-celula" key={k}>
+                    <span>{valor}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <Foto src="/convite/02-contagem.jpg" alt="Página 2" />
-        </section>
-
-        <section className="rc-pagina" ref={(el) => { telas.current[2] = el; }}>
-          {AREAS_MAPA.map((area) => (
-            <Area key={area.rotulo} area={area} />
-          ))}
-          <Foto src="/convite/03-como-chegar.png" alt="Página 3" />
-        </section>
-
-        <section className="rc-pagina rc-dress" ref={(el) => { telas.current[3] = el; }}>
-          <Luzes luzes={LUZES_DRESS} classe="rc-luz-dress" />
-          <Foto src="/convite/04-dress-code.png" alt="Página 4" />
-        </section>
-
-        <section className="rc-pagina" ref={(el) => { telas.current[4] = el; }}>
-          <Foto src="/convite/05-indicacoes.png" alt="Página 5" />
-          {AREAS_INDICACOES.map((area) => (
-            <Area key={area.rotulo} area={area} />
-          ))}
-        </section>
-
-        <section className="rc-pagina" ref={(el) => { telas.current[5] = el; }}>
-          {PRESENTES_TOPO.map((topo, i) => (
-            <button
-              key={i}
-              type="button"
-              className="rc-presente"
-              aria-label={`Abrir Pix do presente ${i + 1}`}
-              style={{ top: `${topo}%` }}
-              onClick={() => abrirPresente(i)}
-            />
-          ))}
-          <Foto src="/convite/06-presentes.png" alt="Página 6" />
-        </section>
-
-        <section className="rc-pagina" ref={(el) => { telas.current[6] = el; }}>
-          <button
-            type="button"
-            className="rc-confirmar"
-            aria-label="Confirmar presença"
-            onClick={abrirAfter}
-          />
-          <Foto src="/convite/07-confirmar.png" alt="Página 7" />
-        </section>
+            )}
+            {tela.areas?.map((area) => <Area key={area.rotulo} area={area} />)}
+            {tela.presentes &&
+              PRESENTES_TOPO.map((topo, k) => (
+                <button
+                  key={k}
+                  type="button"
+                  className="rc-presente"
+                  aria-label={`Abrir Pix do presente ${k + 1}`}
+                  style={{ top: `${topo}%` }}
+                  onClick={() => abrirPresente(k)}
+                />
+              ))}
+            {tela.confirmar && (
+              <button
+                type="button"
+                className="rc-confirmar"
+                aria-label="Confirmar presença"
+                onClick={abrirAfter}
+              />
+            )}
+            <Foto imagem={tela.imagem} />
+          </section>
+        ))}
       </div>
 
       <div className={`rc-nav${classeSite}`}>
@@ -355,7 +299,7 @@ export default function ConviteReplica() {
           ‹
         </button>
         <span>
-          {atual + 1} / {TOTAL_TELAS}
+          {atual + 1} / {totalTelas}
         </span>
         <button type="button" aria-label="Próxima tela" onClick={() => ir(atual + 1)}>
           ›
@@ -367,15 +311,10 @@ export default function ConviteReplica() {
           ← Voltar
         </button>
         <div className={`rc-after-slide rc-after-primeiro${ativo === "primeiro" ? " rc-ativo" : ""}`}>
-          <Foto src="/convite/after-1-confirmada.png" alt="Sua presença está confirmada" />
+          <Foto imagem={versao.afterConfirmada} />
         </div>
         <div className={`rc-after-slide rc-after-segundo${ativo === "segundo" ? " rc-ativo" : ""}`}>
-          <Foto
-            src="/convite/after-2.jpg"
-            alt="After"
-            imgRef={imgAfter2}
-            aoCarregar={() => setAfter2Carregada(true)}
-          />
+          <Foto imagem={versao.after} imgRef={imgAfter2} aoCarregar={() => setAfter2Carregada(true)} />
           <a
             className="rc-pix-area"
             aria-label="Copiar Pix do After"
@@ -383,7 +322,7 @@ export default function ConviteReplica() {
             style={areaPix}
             onClick={(e) => {
               e.preventDefault();
-              void copiarTexto(PIX_AFTER);
+              void copiarTexto(versao.pixAfter);
             }}
           />
         </div>
