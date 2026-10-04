@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 import StarField from "./components/star-field";
+import ChuvaBrilho from "./components/chuva-brilho";
 import CurtainIntro from "./components/curtain-intro";
 
 const cormorant = Cormorant_Garamond({
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <StarField cores={["201,162,93", "236,214,164", "217,169,160", "255,241,214"]} />
         <CurtainIntro />
         {children}
+        <ChuvaBrilho />
       </body>
     </html>
   );

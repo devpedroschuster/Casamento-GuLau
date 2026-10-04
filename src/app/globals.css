@@ -60,6 +60,16 @@ body {
   z-index: 0;
 }
 
+/* Chuva de brilho (ver ChuvaBrilho) — igual ao star-field, só que na frente
+   do conteúdo das seções (z acima do 1 da .secao), sempre atrás do menu
+   fixo (z-20) e nunca capturando clique. */
+.chuva-brilho {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+
 /* ── Abertura de palco (CurtainIntro) ───────────────────────────────────────
    Cortina fechada cobrindo a tela, spotlight e o casal em silhueta aparecem,
    e então as duas metades se abrem para os lados revelando o site. Roda uma
