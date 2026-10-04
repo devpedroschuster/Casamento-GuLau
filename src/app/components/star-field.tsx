@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 export const CORES = ["236,214,164", "212,220,232", "255,249,232", "201,162,93"];
 
 /** Sprite da estrela de quatro pontas, desenhado uma única vez por cor. */
-function criarSprite(cor: string) {
+export function criarSprite(cor: string) {
   const S = 96;
   const meio = S / 2;
   const r = S / 7;
