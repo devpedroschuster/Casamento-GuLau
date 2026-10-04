@@ -1342,3 +1342,14 @@ Expected: build concluído; rota `/` listada. Se o build falhar por variável de
 - [ ] **Step 8: Encerrar**
 
 Parar o servidor de dev (3006) e o `http.server` (4010). Garantir `git status` limpo e relatar ao Pedro: o que foi comparado, as diferenças intencionais (desktop) e o que ficou como no original (navegação fora do centro no celular, Pix do After sem aviso de "copiado", contador que só muda pelos botões).
+
+---
+
+## Registro da execução (desvios do plano)
+
+- `next/image`: no Next 16 `priority` está obsoleta; a capa usa `preload`.
+- `tsc` num worktree novo precisa de `npx next typegen` (o tipo global `LayoutProps` é gerado). `next typegen`, `next dev` e `next build` reescrevem `next-env.d.ts`; essa mudança não é commitada.
+- Botões: o reset do Tailwind (padding 0, fonte herdada) mudava o tamanho dos botões em relação ao HTML. Corrigido com `font: revert` (padrão de cada plataforma), `line-height: normal` e `padding: 1px 6px` na navegação. Depois disso o ENTRAR, a navegação e o modal Pix ficaram idênticos ao original, medidos no navegador.
+- After: no original os 5200 ms contam a partir do clique (e não do primeiro quadro de animação). A sequência foi reescrita com `afterAberto` + `ativo` para ter a mesma linha do tempo (acende em ~40 ms, apaga em ~5,2 s, After em ~5,56 s; diferença de até 10 ms para o original).
+- A área clicável do Pix do After: no HTML original ela só é posicionada no carregamento (com o overlay oculto, onde a imagem tem tamanho 0) e em `resize`, então fica 0×0 até a janela mudar de tamanho. Aqui ela é posicionada ao abrir o After.
+- Navegação "‹ n / 7 ›": no celular continua como no HTML (`left: 50%` sem centralizar, então fica deslocada para a direita); só a partir de 700 px ela é centralizada.
