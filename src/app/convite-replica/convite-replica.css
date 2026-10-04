@@ -14,12 +14,16 @@ body:has(.rc-raiz) {
 
 .rc-raiz {
   font-family: Georgia, serif;
+  /* o Tailwind põe line-height 1.5 no html; o original usa o padrão (normal) */
+  line-height: normal;
+  color: black;
 }
 /* O Tailwind (preflight) faz os botões herdarem a fonte; o original usa o
-   padrão do navegador. :where() mantém a especificidade em zero para as
-   classes abaixo poderem sobrescrever. */
+   padrão do navegador. `revert` devolve a fonte padrão de cada plataforma
+   (Arial no Windows, system-ui no Mac/iOS), e :where() mantém a
+   especificidade em zero para as classes abaixo poderem sobrescrever. */
 :where(.rc-raiz) button {
-  font: 13.3333px system-ui, sans-serif;
+  font: revert;
 }
 
 /* ── Capa ─────────────────────────────────────────────────────────────── */
@@ -253,6 +257,8 @@ body:has(.rc-raiz) {
   background: none;
   color: white;
   font-size: 25px;
+  /* o reset do Tailwind zera o padding padrão do botão (1px 6px) */
+  padding: 1px 6px;
 }
 
 /* ── After ────────────────────────────────────────────────────────────── */
@@ -377,7 +383,7 @@ body:has(.rc-raiz) {
   background: rgba(255, 255, 255, 0.7);
   padding: 12px;
   color: #4d2c12;
-  font-family: monospace;
+  font-family: revert;
   font-size: 13px;
   line-height: 1.35;
 }

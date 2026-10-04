@@ -18,9 +18,8 @@ import {
 const TOTAL_TELAS = 7;
 const ALVO_CONTAGEM = new Date("2026-11-28T17:00:00-03:00").getTime();
 
-/** Fases do After: as duas imagens ficam apagadas ("preparando" e "intervalo"),
-    exceto quando a fase é a delas. */
-type FaseAfter = "fechado" | "preparando" | "primeiro" | "intervalo" | "segundo";
+/** Qual das duas imagens do After está visível (a outra fica apagada). */
+type AfterAtivo = "nenhum" | "primeiro" | "segundo";
 
 function formatarContagem(agora: number | null) {
   let diff = agora === null ? 0 : Math.max(0, ALVO_CONTAGEM - agora);
@@ -123,7 +122,8 @@ export default function ConviteReplica() {
   const [aberto, setAberto] = useState(false);
   const [atual, setAtual] = useState(0);
   const [agora, setAgora] = useState<number | null>(null);
-  const [fase, setFase] = useState<FaseAfter>("fechado");
+  const [afterAberto, setAfterAberto] = useState(false);
+  const [ativo, setAtivo] = useState<AfterAtivo>("nenhum");
   const [presente, setPresente] = useState<number | null>(null);
   const [statusPix, setStatusPix] = useState("");
   const [areaPix, setAreaPix] = useState<CSSProperties>({});
@@ -149,33 +149,36 @@ export default function ConviteReplica() {
     if (aberto) telas.current[0]?.scrollIntoView({ behavior: "smooth" });
   }, [aberto]);
 
-  // Sequência do After: pinta apagado → confirmada (5200ms) → preto (350ms) → After.
+  // Sequência do After, como no original: com o overlay aberto e as duas
+  // imagens apagadas, deixa o navegador pintar um quadro e acende a
+  // "confirmada" (fade); 5200ms depois do clique ela apaga, e 350ms de preto
+  // depois entra a tela do After.
   useEffect(() => {
-    if (fase === "preparando") {
-      let segundoQuadro = 0;
-      const primeiroQuadro = requestAnimationFrame(() => {
-        segundoQuadro = requestAnimationFrame(() => setFase("primeiro"));
+    if (!afterAberto) return;
+    let segundoQuadro = 0;
+    const ids: number[] = [];
+    const primeiroQuadro = requestAnimationFrame(() => {
+      segundoQuadro = requestAnimationFrame(() => {
+        setAtivo((atual) => (atual === "nenhum" ? "primeiro" : atual));
       });
-      return () => {
-        cancelAnimationFrame(primeiroQuadro);
-        cancelAnimationFrame(segundoQuadro);
-      };
-    }
-    if (fase === "primeiro") {
-      const id = setTimeout(() => setFase("intervalo"), 5200);
-      return () => clearTimeout(id);
-    }
-    if (fase === "intervalo") {
-      const id = setTimeout(() => setFase("segundo"), 350);
-      return () => clearTimeout(id);
-    }
-  }, [fase]);
+    });
+    ids.push(
+      window.setTimeout(() => {
+        setAtivo("nenhum");
+        ids.push(window.setTimeout(() => setAtivo("segundo"), 350));
+      }, 5200),
+    );
+    return () => {
+      cancelAnimationFrame(primeiroQuadro);
+      cancelAnimationFrame(segundoQuadro);
+      ids.forEach(clearTimeout);
+    };
+  }, [afterAberto]);
 
   // Posiciona a área clicável do Pix do After sobre o botão marrom da imagem
   // (em px, a partir da imagem renderizada — igual ao original).
-  const afterVisivel = fase !== "fechado";
   useEffect(() => {
-    if (!afterVisivel) return;
+    if (!afterAberto) return;
     let quadro = 0;
     let atraso = 0;
     const posicionar = () => {
@@ -206,7 +209,7 @@ export default function ConviteReplica() {
       window.removeEventListener("resize", agendar);
       window.removeEventListener("orientationchange", aoGirar);
     };
-  }, [afterVisivel, after2Carregada]);
+  }, [afterAberto, after2Carregada]);
 
   // Esc fecha o modal Pix.
   useEffect(() => {
@@ -222,6 +225,16 @@ export default function ConviteReplica() {
     const novo = Math.max(0, Math.min(TOTAL_TELAS - 1, n));
     setAtual(novo);
     telas.current[novo]?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function abrirAfter() {
+    setAtivo("nenhum");
+    setAfterAberto(true);
+  }
+
+  function fecharAfter() {
+    setAfterAberto(false);
+    setAtivo("nenhum");
   }
 
   async function copiarPresente(pix: string) {
@@ -331,7 +344,7 @@ export default function ConviteReplica() {
             type="button"
             className="rc-confirmar"
             aria-label="Confirmar presença"
-            onClick={() => setFase("preparando")}
+            onClick={abrirAfter}
           />
           <Foto src="/convite/07-confirmar.png" alt="Página 7" />
         </section>
@@ -349,14 +362,14 @@ export default function ConviteReplica() {
         </button>
       </div>
 
-      <div className={`rc-after${afterVisivel ? " rc-visivel" : ""}`}>
-        <button type="button" className="rc-voltar" onClick={() => setFase("fechado")}>
+      <div className={`rc-after${afterAberto ? " rc-visivel" : ""}`}>
+        <button type="button" className="rc-voltar" onClick={fecharAfter}>
           ← Voltar
         </button>
-        <div className={`rc-after-slide rc-after-primeiro${fase === "primeiro" ? " rc-ativo" : ""}`}>
+        <div className={`rc-after-slide rc-after-primeiro${ativo === "primeiro" ? " rc-ativo" : ""}`}>
           <Foto src="/convite/after-1-confirmada.png" alt="Sua presença está confirmada" />
         </div>
-        <div className={`rc-after-slide rc-after-segundo${fase === "segundo" ? " rc-ativo" : ""}`}>
+        <div className={`rc-after-slide rc-after-segundo${ativo === "segundo" ? " rc-ativo" : ""}`}>
           <Foto
             src="/convite/after-2.jpg"
             alt="After"
