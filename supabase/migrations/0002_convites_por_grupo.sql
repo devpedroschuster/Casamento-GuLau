@@ -1,15 +1,29 @@
 -- Convite de Casamento Laura & Gu
+-- ============================================================================
+-- ATENÇÃO — ESTA MIGRAÇÃO JÁ FOI APLICADA EM PRODUÇÃO (em 2026-10-03, junto com
+-- a 0003_checkin_convidados.sql). NÃO RODE DE NOVO.
+-- Qualquer nova alteração no banco deve ir em uma migração nova: 0004 ou
+-- posterior. Não edite este arquivo para mudar o schema.
+-- ============================================================================
+--
 -- Migração para o modelo "1 link único" (estilo i.casei):
 -- não existe mais slug individual. A busca é feita digitando o nome
 -- (texto normalizado: sem acento, minúsculo, "contém").
---
--- ATENÇÃO: este script derruba a tabela antiga "convidados" (baseada em slug).
--- Só rode se ainda não há confirmações reais em produção que você precise preservar.
--- Se já tiver dados reais, me avise antes de rodar — dá pra migrar em vez de derrubar.
 
 create extension if not exists unaccent;
 
-drop table if exists convidados cascade;
+-- Derruba só a tabela ANTIGA "convidados" (a baseada em slug). Se a tabela já
+-- for a nova (sem coluna slug), não faz nada — assim um re-run acidental não
+-- apaga os convidados cadastrados.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'convidados' and column_name = 'slug'
+  ) then
+    drop table convidados cascade;
+  end if;
+end $$;
 
 create table convites (
   id uuid primary key default gen_random_uuid(),
@@ -37,8 +51,9 @@ create table convidados (
 
 create index idx_convidados_convite_id on convidados (convite_id);
 
--- Índice funcional para acelerar a busca por nome normalizado (sem acento, minúsculo)
-create index idx_convidados_nome_normalizado on convidados (lower(unaccent(nome)));
+-- Sem índice funcional em lower(unaccent(nome)): unaccent() não é IMMUTABLE (o
+-- Postgres recusa a criação) e, de todo modo, um índice btree não ajuda numa
+-- busca "contém" (ilike '%termo%') — a lista de convidados é pequena.
 
 -- RLS ligado, sem policies: client anon é bloqueado direto na tabela.
 -- Toda leitura/escrita passa pelas Edge Functions (service role key).
@@ -55,7 +70,7 @@ returns table (convite_id uuid)
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select distinct c.convite_id
   from convidados c

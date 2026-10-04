@@ -23,6 +23,13 @@ presença por etapa e QR Code Pix para o after.
    supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<sua service role key>
    ```
 
+   Atenção: as Edge Functions **não** são as únicas a usar a service role key. A
+   rota de API do painel admin (`/api/admin/convites`) também lê `SUPABASE_URL` e
+   `SUPABASE_SERVICE_ROLE_KEY`, no **servidor** do Next. Defina as duas como
+   variáveis de ambiente **somente de servidor** na hospedagem (nunca com prefixo
+   `NEXT_PUBLIC_`, para a chave não chegar ao navegador) e aponte para o **mesmo**
+   projeto Supabase de `NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL`.
+
 ## 2. Configurar o Next.js
 
 Copie `.env.example` para `.env.local` e preencha:
@@ -60,7 +67,21 @@ Recomendado: Vercel.
 ```
 vercel
 ```
-Configure as mesmas env vars do `.env.local` no painel da Vercel.
+Configure as mesmas env vars do `.env.local` no painel da Vercel. Inclua também
+`SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` como variáveis **de servidor** (sem
+`NEXT_PUBLIC_`), exigidas pelo painel `/admin` (veja a seção abaixo).
+
+## Painel /admin
+
+- URL: `/admin` (página escondida, sem link em nenhum lugar do site).
+- O que faz: cadastra grupos de convidados (nome do grupo, lista e as pessoas de
+  cada grupo) e mostra, por pessoa, se já fez check-in e, por etapa, a confirmação
+  de presença (cerimônia, festa, after) e o status do pagamento do after.
+- **Não tem login.** A única proteção é a URL não ser divulgada — não compartilhe o
+  endereço. A rota que alimenta o painel (`/api/admin/convites`) usa a service role
+  key no servidor.
+- A Edge Function `get-convidado` está obsoleta: foi substituída por
+  `buscar-convite` (busca pelo nome digitado, em um único link para todos).
 
 ## Estrutura
 
@@ -75,7 +96,8 @@ Configure as mesmas env vars do `.env.local` no painel da Vercel.
 ## Segurança
 
 RLS está ativado na tabela `convidados` sem nenhuma policy — o client anon não
-acessa a tabela diretamente. Toda leitura/escrita passa pelas Edge Functions
-(que usam a service role key), e a function `confirmar-presenca` só grava as
+acessa a tabela diretamente. Toda leitura/escrita passa pelas Edge Functions e
+pela rota de API do painel admin (ambas usam a service role key, só no
+servidor), e a function `confirmar-presenca` só grava as
 etapas permitidas pelo perfil do convidado, mesmo que o payload enviado tente
 forçar outra coisa.

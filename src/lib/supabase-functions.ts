@@ -3,6 +3,7 @@ export type Perfil = "cerimonia_festa_after" | "festa_after";
 export interface Pessoa {
   id: string;
   nome: string;
+  checkin_em: string | null;
   confirmou_cerimonia: boolean | null;
   confirmou_festa: boolean | null;
   confirmou_after: boolean | null;

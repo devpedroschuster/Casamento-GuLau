@@ -94,7 +94,7 @@ Deno.serve(async (req: Request) => {
     const { data: pessoas, error: pessoasError } = await supabase
       .from("convidados")
       .select(
-        "id, nome, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
+        "id, nome, checkin_em, confirmou_cerimonia, confirmou_festa, confirmou_after, status_pagamento_after, valor_after, respondido_em"
       )
       .eq("convite_id", conviteId)
       .order("nome");
@@ -104,6 +104,29 @@ Deno.serve(async (req: Request) => {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Check-in: na primeira vez que alguém do grupo é encontrado na busca,
+    // marca check-in para TODO o grupo (não só quem digitou o nome) — evita
+    // ambiguidade quando a busca bate em mais de uma pessoa com nome
+    // parecido dentro do mesmo convite. Nunca bloqueia a resposta ao
+    // convidado se a gravação falhar.
+    const agora = new Date().toISOString();
+    const idsSemCheckin = pessoas.filter((p) => !p.checkin_em).map((p) => p.id);
+
+    if (idsSemCheckin.length > 0) {
+      const { error: checkinError } = await supabase
+        .from("convidados")
+        .update({ checkin_em: agora })
+        .in("id", idsSemCheckin);
+
+      if (checkinError) {
+        console.error("Erro ao gravar check-in:", checkinError.message);
+      } else {
+        for (const p of pessoas) {
+          if (idsSemCheckin.includes(p.id)) p.checkin_em = agora;
+        }
+      }
     }
 
     return new Response(
