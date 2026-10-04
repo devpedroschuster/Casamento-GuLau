@@ -8,3 +8,4 @@ AGENTS.md
 CLAUDE.md
 tsconfig.tsbuildinfo
 repomix-output.xml
+.claude/worktrees/

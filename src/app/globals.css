@@ -60,6 +60,16 @@ body {
   z-index: 0;
 }
 
+/* Chuva de brilho (ver ChuvaBrilho) — igual ao star-field, só que na frente
+   do conteúdo das seções (z acima do 1 da .secao), sempre atrás do menu
+   fixo (z-20) e nunca capturando clique. */
+.chuva-brilho {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+
 /* ── Abertura de palco (CurtainIntro) ───────────────────────────────────────
    Cortina fechada cobrindo a tela, spotlight e o casal em silhueta aparecem,
    e então as duas metades se abrem para os lados revelando o site. Roda uma
@@ -429,6 +439,33 @@ body {
   position: absolute;
   inset: 0;
   overflow: hidden;
+}
+
+/* Celular: o quadro vertical 2:3 (altura = 150% da largura) aparece inteiro,
+   no tamanho natural, repetido de cima para baixo ao longo da seção em vez de
+   esticado pela altura (ver FundoFoto). O degradê creme de 12% no topo de cada
+   quadro dissolve a emenda entre um quadro e o seguinte. Em telas maiores a
+   camada fica oculta e vale o cover. */
+.fundo-foto-quadros {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(180deg, rgba(248, 241, 226, 0.9) 0%, rgba(248, 241, 226, 0) 12%),
+    var(--quadro);
+  background-repeat: repeat-y;
+  background-size: 100% 150vw;
+  background-position: center top;
+}
+
+@media (max-width: 767px) {
+  .fundo-foto-camada-quadros > img {
+    display: none;
+  }
+
+  .fundo-foto-camada-quadros > .fundo-foto-quadros {
+    display: block;
+  }
 }
 
 /* Fotos já limpas (sem texto/QR) — o véu aqui é só uma leve pitada de creme
