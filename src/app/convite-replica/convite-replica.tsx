@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import "./convite-replica.css";
-import type { Convite } from "@/lib/supabase-functions";
+import type { Convite, Pessoa } from "@/lib/supabase-functions";
 import CapaEntrada from "./capa-entrada";
 import Foto from "./foto";
+import JanelaConfirmacao from "./janela-confirmacao";
 import { PRESENTES_TOPO, type AreaClicavel, type Luz } from "./dados";
 import { VERSAO_PRIMEIRO_HORARIO, versaoDoPerfil, type Imagem } from "./versoes";
 
@@ -87,6 +88,7 @@ export default function ConviteReplica() {
   const [convite, setConvite] = useState<Convite | null>(null);
   const [atual, setAtual] = useState(0);
   const [agora, setAgora] = useState<number | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
   const [afterAberto, setAfterAberto] = useState(false);
   const [ativo, setAtivo] = useState<AfterAtivo>("nenhum");
   const [presente, setPresente] = useState<number | null>(null);
@@ -209,6 +211,17 @@ export default function ConviteReplica() {
     setAtivo("nenhum");
   }
 
+  function atualizarPessoas(gravadas: Pessoa[]) {
+    setConvite((c) =>
+      c && { ...c, pessoas: c.pessoas.map((p) => gravadas.find((g) => g.id === p.id) ?? p) },
+    );
+  }
+
+  function concluirConfirmacao() {
+    setConfirmando(false);
+    abrirAfter();
+  }
+
   async function copiarPresente(pix: string) {
     try {
       await navigator.clipboard.writeText(pix);
@@ -289,7 +302,7 @@ export default function ConviteReplica() {
                 type="button"
                 className="rc-confirmar"
                 aria-label="Confirmar presença"
-                onClick={abrirAfter}
+                onClick={() => setConfirmando(true)}
               />
             )}
             <Foto imagem={tela.imagem} />
@@ -330,6 +343,16 @@ export default function ConviteReplica() {
           />
         </div>
       </div>
+
+      {confirmando && convite && (
+        <JanelaConfirmacao
+          pessoas={convite.pessoas}
+          perfil={convite.perfil}
+          aoGravar={atualizarPessoas}
+          aoConcluir={concluirConfirmacao}
+          aoFechar={() => setConfirmando(false)}
+        />
+      )}
 
       <div
         className={`rc-pix-modal${presente !== null ? " rc-mostrar" : ""}`}
