@@ -5,15 +5,11 @@ const CARDS = [
   {
     titulo: "Quando",
     texto:
-      "28 de novembro de 2026, a partir das 17h. O horário das demais etapas depende do tipo de convite — confira ao fazer seu check-in, ao final da página.",
+      "28 de novembro de 2026. Confira o horário ao fazer seu check-in, ao final da página.",
   },
   {
     titulo: "Onde",
     texto: "Quintal dos Belgas — Estr. Fazenda Conceição, 605b, Morungava, Gravataí - RS.",
-  },
-  {
-    titulo: "Esse site",
-    texto: "Criamos esse site para que possamos compartilhar informações importantes sobre nosso casamento, como a lista de presentes, detalhes do evento e outras informações úteis para vocês.",
   },
   {
     titulo: "Sua presença",
