@@ -1109,3 +1109,16 @@ Run: `npm run build` → concluído, rota `/` listada.
 - [ ] **Step 5: Encerrar**
 
 Parar o dev server (3006) e o mock (4020). `git checkout -- next-env.d.ts` se estiver modificado. `git status` limpo. Atualizar este plano com um "Registro da execução" e commitar. Relatar ao Pedro: o que foi verificado, o que só dá para testar no backend real (preview do Vercel) e os limites conhecidos do spec.
+
+---
+
+## Registro da execução
+
+- Seguiu o plano sem desvios de código. As quatro tarefas foram feitas na ordem; a Task 1 foi só reorganização (as 20 áreas, as 7 seções, `docH` 3973 e a navegação ficaram idênticos).
+- `TaskStop` encerra o `npm`, mas o processo do Next (`node`) continua escutando na porta; para liberar a 3006 foi preciso `Stop-Process` no PID que escuta a porta. O servidor antigo, sem as variáveis de ambiente, chegou a ficar vivo e foi encerrado antes dos testes da entrada.
+- Mock das funções (`mock-funcoes.mjs`, porta 4020): no caso `offline` o log registra duas buscas, porque o Chrome repete a requisição quando a conexão cai; é efeito do mock, não do código.
+- Entrada verificada (375 px): campo vazio sem chamada ao backend e com "Digite seu nome"; 400, 404, 409, 500 e falha de rede com as mensagens esperadas; ENTRAR continua em (102,5; 698) com 170×49 mesmo com o erro na tela; o nome é salvo sem espaços; ao recarregar o campo volta preenchido sem entrar sozinho.
+- Confirmação verificada: grupo de duas pessoas (cerimônia + festa `true`), desmarcar uma (`false` nos dois campos) e reabrir (marcações refletem o gravado), todas desmarcadas (CONFIRMAR desabilitado), perfil `festa_after` (só `confirmou_festa`), falha de gravação de um membro (mensagem com o nome, janela aberta, After não inicia, os outros gravados).
+- Desktop (1280 px): capa com campo e ENTRAR centralizados; após entrar, seções de 520 px centralizadas, áreas com os mesmos percentuais e navegação no centro.
+- `tsc` limpo, lint nos mesmos 5 problemas de `origin/main`, `npm run build` verde.
+- Não testado: backend real (só no preview do Vercel, depois do PR) e aparelho físico.
