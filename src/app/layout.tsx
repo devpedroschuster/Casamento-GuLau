@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
-import StarField from "./components/star-field";
-import ChuvaBrilho from "./components/chuva-brilho";
-import CurtainIntro from "./components/curtain-intro";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -27,10 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`h-full antialiased ${cormorant.variable} ${manrope.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
-        <StarField cores={["201,162,93", "236,214,164", "217,169,160", "255,241,214"]} />
-        <CurtainIntro />
         {children}
-        <ChuvaBrilho />
       </body>
     </html>
   );
