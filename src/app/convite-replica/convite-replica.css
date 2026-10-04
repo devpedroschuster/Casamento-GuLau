@@ -164,6 +164,16 @@ body:has(.rc-raiz) {
   display: block;
   align-self: flex-start;
 }
+/* O original deixa uma faixa branca de 5px entre as telas (padding-bottom +
+   fundo branco). A margem negativa faz a próxima tela cobrir essa faixa, e as
+   imagens se encostam sem emenda. A altura da seção não muda, então as áreas
+   clicáveis (em % dela) ficam onde estavam. A última tela termina sem faixa. */
+.rc-pagina:not(:last-child) {
+  margin-bottom: -5px;
+}
+.rc-pagina:last-child {
+  background: transparent;
+}
 
 /* Contagem regressiva sobre as caixas desenhadas na tela 2 */
 .rc-contagem {
