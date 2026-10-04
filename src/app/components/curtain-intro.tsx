@@ -56,7 +56,19 @@ export default function CurtainIntro() {
   if (fase === "capa") {
     return (
       <div className="cortina-capa">
-        <Image src="/dourado/hero.png" alt="" fill priority className="object-cover" />
+        <Image
+          src="/dourado/hero.png"
+          alt=""
+          fill
+          sizes="25vw"
+          quality={40}
+          loading="lazy"
+          aria-hidden="true"
+          className="cortina-capa-fundo"
+        />
+        <div className="cortina-capa-moldura">
+          <Image src="/dourado/hero.png" alt="" fill priority sizes="100vw" className="cortina-capa-imagem" />
+        </div>
         <div className="cortina-capa-veu" />
         <button type="button" onClick={entrar} className="cortina-capa-botao">
           Entrar
