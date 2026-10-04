@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import "./convite-replica.css";
 import type { Convite, Pessoa } from "@/lib/supabase-functions";
+import ChuvaBrilho from "../components/chuva-brilho";
 import CapaEntrada from "./capa-entrada";
 import Foto from "./foto";
 import JanelaConfirmacao from "./janela-confirmacao";
@@ -86,7 +87,6 @@ function Luzes({ luzes, classe }: { luzes: Luz[]; classe: string }) {
 
 export default function ConviteReplica() {
   const [convite, setConvite] = useState<Convite | null>(null);
-  const [atual, setAtual] = useState(0);
   const [agora, setAgora] = useState<number | null>(null);
   const [confirmando, setConfirmando] = useState(false);
   const [afterAberto, setAfterAberto] = useState(false);
@@ -100,7 +100,6 @@ export default function ConviteReplica() {
   // imagens já carregam durante a capa, como no original.
   const aberto = convite !== null;
   const versao = convite ? versaoDoPerfil(convite.perfil) : VERSAO_PRIMEIRO_HORARIO;
-  const totalTelas = versao.telas.length;
   const alvoContagem = new Date(versao.alvoContagem).getTime();
 
   const telas = useRef<(HTMLElement | null)[]>([]);
@@ -194,12 +193,6 @@ export default function ConviteReplica() {
     document.addEventListener("keydown", aoTeclar);
     return () => document.removeEventListener("keydown", aoTeclar);
   }, [presente]);
-
-  function ir(n: number) {
-    const novo = Math.max(0, Math.min(totalTelas - 1, n));
-    setAtual(novo);
-    telas.current[novo]?.scrollIntoView({ behavior: "smooth" });
-  }
 
   function abrirAfter() {
     setAtivo("nenhum");
@@ -310,17 +303,9 @@ export default function ConviteReplica() {
         ))}
       </div>
 
-      <div className={`rc-nav${classeSite}`}>
-        <button type="button" aria-label="Tela anterior" onClick={() => ir(atual - 1)}>
-          ‹
-        </button>
-        <span>
-          {atual + 1} / {totalTelas}
-        </span>
-        <button type="button" aria-label="Próxima tela" onClick={() => ir(atual + 1)}>
-          ›
-        </button>
-      </div>
+      {/* Chuva de estrelas por cima das telas (z-index 15): abaixo do After, das
+          janelas e do modal Pix, e sem capturar cliques. Só depois de entrar. */}
+      {aberto && <ChuvaBrilho />}
 
       <div className={`rc-after${afterAberto ? " rc-visivel" : ""}`}>
         <button type="button" className="rc-voltar" onClick={fecharAfter}>

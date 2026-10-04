@@ -290,32 +290,6 @@ body:has(.rc-raiz) {
   .rc-luz-dress { animation: none; opacity: 0.16; }
 }
 
-/* ── Navegação ────────────────────────────────────────────────────────── */
-.rc-nav {
-  position: fixed;
-  z-index: 15;
-  bottom: 16px;
-  left: 50%;
-  display: none;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 14px;
-  border-radius: 30px;
-  background: rgba(20, 12, 6, 0.7);
-  color: white;
-}
-.rc-nav.rc-visivel {
-  display: flex;
-}
-.rc-nav button {
-  border: 0;
-  background: none;
-  color: white;
-  font-size: 25px;
-  /* o reset do Tailwind zera o padding padrão do botão (1px 6px) */
-  padding: 1px 6px;
-}
-
 /* ── After ────────────────────────────────────────────────────────────── */
 .rc-after {
   display: none;
@@ -521,8 +495,5 @@ body:has(.rc-raiz) {
   }
   .rc-after-slide img {
     max-width: 520px;
-  }
-  .rc-nav {
-    transform: translateX(-50%);
   }
 }
