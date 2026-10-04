@@ -4,7 +4,7 @@ import FundoFoto from "./fundo-foto";
 export default function Hero() {
   return (
     <section className="secao fundo-champagne overflow-hidden min-h-[85vh] flex flex-col items-center justify-center text-center px-6 py-20">
-      <FundoFoto src="/dourado/hero.png" prioridade />
+      <FundoFoto src="/fundo-convite.jpg" prioridade />
       <div className="relative z-10 flex flex-col items-center texto-com-sombra">
         <p className="text-xs tracking-[0.4em] uppercase eyebrow-metal font-medium mb-4">
           Vamos nos casar
