@@ -179,6 +179,43 @@ body {
   inset: 0;
   z-index: 51;
   overflow: hidden;
+  background: #b99a6b; /* tom médio da arte; aparece enquanto o fundo desfocado carrega */
+}
+
+/* A arte é horizontal (3:2) e o "L&G" ocupa ~68% da largura. Em tela larga o
+   cover enquadra bem; em tela em pé o cover mostra só ~30% da largura e corta
+   as letras, então ali a arte aparece inteira, numa faixa 3:2 centralizada
+   cujas bordas de cima e de baixo se dissolvem numa cópia desfocada dela
+   mesma que preenche o resto da tela. */
+.cortina-capa-moldura {
+  position: absolute;
+  inset: 0;
+}
+
+.cortina-capa-imagem {
+  object-fit: cover;
+}
+
+.cortina-capa-fundo {
+  display: none;
+  object-fit: cover;
+  filter: blur(28px) saturate(1.1);
+  transform: scale(1.15); /* esconde a borda esmaecida do blur */
+}
+
+@media (max-aspect-ratio: 6/5) {
+  .cortina-capa-fundo {
+    display: block;
+  }
+
+  .cortina-capa-moldura {
+    inset: auto 0;
+    top: 50%;
+    aspect-ratio: 3 / 2;
+    transform: translateY(-50%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+  }
 }
 
 .cortina-capa-veu {
