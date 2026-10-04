@@ -18,7 +18,7 @@ export default function ComoChegar() {
         </p>
         <h2 className="font-display italic text-3xl mb-2">{NOME_LOCAL}</h2>
         <p className="text-platinum/80 text-sm mb-6">{ENDERECO}</p>
-        <p className="text-platinum/70 text-sm leading-relaxed max-w-md mx-auto mb-8">
+        <p className="text-platinum text-sm leading-relaxed max-w-md mx-auto mb-8">
           Para que todos possam aproveitar esse momento especial com tranquilidade, pedimos que se
           organizem com antecedência para chegar ao local. Abaixo deixamos os links dos principais
           aplicativos de navegação, que irão te ajudar a encontrar o melhor caminho.
