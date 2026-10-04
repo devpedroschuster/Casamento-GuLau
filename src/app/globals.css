@@ -441,6 +441,33 @@ body {
   overflow: hidden;
 }
 
+/* Celular: o quadro vertical 2:3 (altura = 150% da largura) aparece inteiro,
+   no tamanho natural, repetido de cima para baixo ao longo da seção em vez de
+   esticado pela altura (ver FundoFoto). O degradê creme de 12% no topo de cada
+   quadro dissolve a emenda entre um quadro e o seguinte. Em telas maiores a
+   camada fica oculta e vale o cover. */
+.fundo-foto-quadros {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(180deg, rgba(248, 241, 226, 0.9) 0%, rgba(248, 241, 226, 0) 12%),
+    var(--quadro);
+  background-repeat: repeat-y;
+  background-size: 100% 150vw;
+  background-position: center top;
+}
+
+@media (max-width: 767px) {
+  .fundo-foto-camada-quadros > img {
+    display: none;
+  }
+
+  .fundo-foto-camada-quadros > .fundo-foto-quadros {
+    display: block;
+  }
+}
+
 /* Fotos já limpas (sem texto/QR) — o véu aqui é só uma leve pitada de creme
    pra manter o texto legível e emendar com o resto da página, não pra
    esconder a imagem. */
