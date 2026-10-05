@@ -1,8 +1,8 @@
 /* Réplica do convite interativo — CSS portado do HTML de referência
-   (convite_Laura_Gustavo_presentes_pix-2.html). Valores, cores e tempos são
-   os do original; só mudam os nomes (prefixo .rc-) e as correções de desktop
-   (>= 700px), onde o original tem imagem colada à esquerda, áreas clicáveis
-   desalinhadas e navegação fora do centro. */
+   (convite_Laura_Gustavo_presentes_pix-2.html, atualizado com o pix-6).
+   Valores, cores e tempos são os do original; só mudam os nomes (prefixo
+   .rc-) e as correções de desktop (>= 700px), onde o original tem imagem
+   colada à esquerda e áreas clicáveis desalinhadas. */
 
 html:has(.rc-raiz),
 body:has(.rc-raiz) {

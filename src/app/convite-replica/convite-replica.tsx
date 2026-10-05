@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import "./convite-replica.css";
 import { confirmarPresenca, type Convite, type Pessoa } from "@/lib/supabase-functions";
-import ChuvaBrilho from "../components/chuva-brilho";
 import CapaEntrada from "./capa-entrada";
 import Foto from "./foto";
 import JanelaConfirmacao from "./janela-confirmacao";
@@ -349,10 +348,6 @@ export default function ConviteReplica() {
           </section>
         ))}
       </div>
-
-      {/* Chuva de estrelas por cima das telas (z-index 15): abaixo do After, das
-          janelas e do modal Pix, e sem capturar cliques. Só depois de entrar. */}
-      {aberto && <ChuvaBrilho />}
 
       {aviso && (
         <div className="rc-aviso" role="alert">
