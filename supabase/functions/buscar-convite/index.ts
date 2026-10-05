@@ -134,7 +134,7 @@ Deno.serve(async (req: Request) => {
       },
       200
     );
-  } catch (_err) {
+  } catch {
     return responder({ error: "Erro inesperado" }, 500);
   }
 });
