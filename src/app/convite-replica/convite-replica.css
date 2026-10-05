@@ -1,8 +1,8 @@
 /* Réplica do convite interativo — CSS portado do HTML de referência
-   (convite_Laura_Gustavo_presentes_pix-2.html). Valores, cores e tempos são
-   os do original; só mudam os nomes (prefixo .rc-) e as correções de desktop
-   (>= 700px), onde o original tem imagem colada à esquerda, áreas clicáveis
-   desalinhadas e navegação fora do centro. */
+   (convite_Laura_Gustavo_presentes_pix-2.html, atualizado com o pix-6).
+   Valores, cores e tempos são os do original; só mudam os nomes (prefixo
+   .rc-) e as correções de desktop (>= 700px), onde o original tem imagem
+   colada à esquerda e áreas clicáveis desalinhadas. */
 
 html:has(.rc-raiz),
 body:has(.rc-raiz) {
@@ -46,20 +46,23 @@ body:has(.rc-raiz) {
   height: 100%;
   object-fit: cover;
 }
-/* Entrada da capa: campo de nome + ENTRAR, ancorados em 8% do fundo. O ENTRAR
-   continua na mesma posição do original; o campo e o erro empilham acima dele. */
+/* Entrada da capa (HTML novo): ENTRAR a 8% do fundo, o campo 62px acima e a
+   mensagem 112px acima, centralizados como no original (filhos absolutos de
+   um contêiner flex centralizado do tamanho da capa). */
 .rc-entrada {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 8%;
+  inset: 0;
   z-index: 3;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  justify-content: center;
+  pointer-events: none;
+}
+.rc-entrada > * {
+  pointer-events: auto;
 }
 .rc-entrar {
+  position: absolute;
+  bottom: 8%;
   padding: 15px 42px;
   border: 1px solid white;
   border-radius: 40px;
@@ -68,39 +71,50 @@ body:has(.rc-raiz) {
   letter-spacing: 4px;
   font-size: 15px;
 }
+/* Apagado com o campo vazio (placeholder à mostra) e durante a busca. */
+.rc-entrada-campo:placeholder-shown ~ .rc-entrar {
+  opacity: 0.55;
+  pointer-events: none;
+}
 .rc-entrar:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 .rc-entrada-campo {
-  width: min(78vw, 300px);
-  padding: 13px 20px;
-  border: 1px solid white;
-  border-radius: 40px;
+  position: absolute;
+  bottom: calc(8% + 62px);
+  /* o original não tem reset: a largura é do conteúdo; padding e borda somam */
+  box-sizing: content-box;
+  width: min(78%, 360px);
+  padding: 13px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 28px;
   background: rgba(20, 12, 6, 0.45);
   color: white;
-  font: 16px Arial, sans-serif;
-  letter-spacing: 1px;
   text-align: center;
+  /* fonte padrão do navegador, como no original; 16px em vez de 15px para o
+     iPhone não dar zoom ao focar */
+  font: revert;
+  font-size: 16px;
+  outline: none;
   appearance: none;
 }
 .rc-entrada-campo::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
   opacity: 1;
 }
 .rc-entrada-campo:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
-}
-.rc-entrada-campo:disabled {
-  opacity: 0.6;
+  background: rgba(20, 12, 6, 0.58);
 }
 .rc-entrada-erro {
+  position: absolute;
+  bottom: calc(8% + 112px);
+  width: min(82%, 380px);
   margin: 0;
-  max-width: min(86vw, 320px);
   text-align: center;
-  color: white;
-  font: 14px/1.35 Arial, sans-serif;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 10px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.35;
+  text-shadow: 0 1px 4px #000;
 }
 
 /* Névoa de energia dourada — uma corrente difusa atravessando o véu, do L ao G */
@@ -331,8 +345,17 @@ body:has(.rc-raiz) {
 .rc-after-primeiro {
   z-index: 2;
 }
+/* Como no HTML novo: a "confirmada" recebe toque (pula para o After) e a tela
+   do After, acesa, também. */
+.rc-after-primeiro.rc-ativo {
+  pointer-events: auto;
+  cursor: pointer;
+}
 .rc-after-segundo {
   z-index: 1;
+}
+.rc-after-segundo.rc-ativo {
+  pointer-events: auto;
 }
 .rc-voltar {
   position: fixed;
@@ -400,7 +423,7 @@ body:has(.rc-raiz) {
   font-family: Georgia, serif;
   font-size: 27px;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 .rc-pix-card textarea {
   width: 100%;
@@ -445,6 +468,80 @@ body:has(.rc-raiz) {
   font-size: 13px;
   color: #7a4b1a;
 }
+/* O HTML novo define este estilo para uma nota do comprovante e não o usa;
+   mantido igual. */
+.rc-pix-nota {
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0 0 14px;
+  color: #6a421d;
+}
+.rc-pix-nota strong {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Tela do comprovante (depois de copiar o Pix do After) ────────────── */
+.rc-comprovante {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(5px);
+}
+.rc-comprovante.rc-mostrar {
+  display: flex;
+}
+.rc-comprovante-moldura {
+  position: relative;
+  display: inline-block;
+  max-width: 96vw;
+  max-height: 92vh;
+  line-height: 0;
+}
+.rc-comprovante img {
+  display: block;
+  max-width: 96vw;
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55);
+}
+.rc-comprovante-whatsapp {
+  position: absolute;
+  left: 12%;
+  top: 86%;
+  width: 76%;
+  height: 6%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: rgba(92, 55, 27, 0.96);
+  color: #fff4df;
+  text-decoration: none;
+  border: 1px solid rgba(230, 194, 135, 0.95);
+  border-radius: 999px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(12px, 2.5vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.28);
+  z-index: 5;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rc-comprovante-whatsapp:active {
+  transform: scale(0.98);
+  background: rgba(74, 42, 20, 0.98);
+}
 
 /* ── Janela de confirmação de presença ────────────────────────────────── */
 .rc-confirma-apoio {
@@ -482,6 +579,23 @@ body:has(.rc-raiz) {
 .rc-pix-acoes button:disabled {
   opacity: 0.55;
   cursor: default;
+}
+
+/* Aviso de falha ao gravar a confirmação: pílula escura no pé da tela. */
+.rc-aviso {
+  position: fixed;
+  z-index: 25;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 18px;
+  border-radius: 30px;
+  background: rgba(20, 12, 6, 0.85);
+  color: white;
+  font: 14px/1.35 Arial, sans-serif;
+  text-align: center;
 }
 
 /* ── Desktop: coluna de 520px centralizada (correções do original) ─────── */

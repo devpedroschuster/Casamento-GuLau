@@ -6,6 +6,8 @@ import {
   LUZES_DRESS,
   PIX_AFTER,
   PRESENTES,
+  VALOR_AFTER,
+  WHATSAPP_COMPROVANTE,
   type AreaClicavel,
   type Luz,
   type Presente,
@@ -32,6 +34,10 @@ export type Versao = {
   afterConfirmada: Imagem;
   after: Imagem;
   pixAfter: string;
+  valorAfter: string;
+  /** Tela "PIX COPIADO" que aparece depois de copiar o Pix do After. */
+  comprovanteAfter: Imagem;
+  whatsappComprovante: string;
   presentes: Presente[];
   /** Data/hora do evento, ISO com fuso, para a contagem regressiva. */
   alvoContagem: string;
@@ -70,6 +76,14 @@ export const VERSAO_PRIMEIRO_HORARIO: Versao = {
   },
   after: { src: "/convite/after-2.jpg", largura: 1024, altura: 1536, alt: "After" },
   pixAfter: PIX_AFTER,
+  valorAfter: VALOR_AFTER,
+  comprovanteAfter: {
+    src: "/convite/pix-copiado.png",
+    largura: 1024,
+    altura: 1536,
+    alt: "Instrução para envio do comprovante via WhatsApp",
+  },
+  whatsappComprovante: WHATSAPP_COMPROVANTE,
   presentes: PRESENTES,
   alvoContagem: "2026-11-28T17:00:00-03:00",
 };

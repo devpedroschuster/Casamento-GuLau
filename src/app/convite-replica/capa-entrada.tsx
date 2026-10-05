@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { buscarConvite, type Convite } from "@/lib/supabase-functions";
+import { mesmoNome, normalizarNome } from "@/lib/nome-convidado";
+import { buscarConvite, ErroFuncao, type Convite } from "@/lib/supabase-functions";
 
 const CHAVE_NOME = "laura-gu:nome-checkin";
+const NAO_ENCONTRADO = "Nome não encontrado na lista de convidados.";
 const ERRO_REDE = "Não foi possível verificar agora. Tente de novo.";
 
-/** O backend responde com mensagens em português (400, 404, 409, 500); falhas
-    de rede ou resposta que não é JSON viram a mensagem genérica. */
+/** 404 vira o texto do HTML; 400 e 409 mostram o texto do servidor; falha de
+    rede, resposta que não é JSON ou erro do servidor viram a mensagem
+    genérica. */
 function mensagemDeErro(e: unknown) {
-  if (e instanceof TypeError || e instanceof SyntaxError) return ERRO_REDE;
-  return e instanceof Error && e.message ? e.message : ERRO_REDE;
+  if (e instanceof ErroFuncao) {
+    if (e.status === 404) return NAO_ENCONTRADO;
+    if (e.status === 400 || e.status === 409) return e.message;
+  }
+  return ERRO_REDE;
 }
 
-/** Campo de nome + ENTRAR da capa. A busca já grava o check-in do grupo. */
+/** Campo "Nome completo" + ENTRAR da capa. A busca grava o check-in de quem
+    entrou. O ENTRAR fica apagado com o campo vazio (CSS :placeholder-shown). */
 export default function CapaEntrada({ aoEntrar }: { aoEntrar: (convite: Convite) => void }) {
   const campo = useRef<HTMLInputElement>(null);
   const [buscando, setBuscando] = useState(false);
@@ -32,14 +39,17 @@ export default function CapaEntrada({ aoEntrar }: { aoEntrar: (convite: Convite)
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     const texto = campo.current?.value.trim() ?? "";
-    if (!texto) {
-      setErro("Digite seu nome");
-      return;
-    }
+    if (!normalizarNome(texto) || buscando) return;
     setBuscando(true);
     setErro(null);
     try {
       const convite = await buscarConvite(texto);
+      // Só entra com o nome inteiro, mesmo que a função publicada ainda seja a
+      // antiga (que achava por pedaço do nome).
+      if (!convite.pessoas.some((p) => mesmoNome(p.nome, texto))) {
+        setErro(NAO_ENCONTRADO);
+        return;
+      }
       try {
         localStorage.setItem(CHAVE_NOME, texto);
       } catch {
@@ -66,10 +76,11 @@ export default function CapaEntrada({ aoEntrar }: { aoEntrar: (convite: Convite)
         type="text"
         name="nome"
         autoComplete="name"
-        placeholder="Digite seu nome"
-        aria-label="Seu nome, como está no convite"
+        placeholder="Nome completo"
+        aria-label="Nome completo"
         maxLength={120}
-        disabled={buscando}
+        required
+        readOnly={buscando}
         onChange={() => setErro(null)}
       />
       <button type="submit" className="rc-entrar" disabled={buscando}>

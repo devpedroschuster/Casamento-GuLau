@@ -27,17 +27,6 @@ function criarClienteAdmin() {
   });
 }
 
-// Mesma normalização da busca pública (buscar-convite): sem acento, minúsculo,
-// espaços colapsados. Usada para detectar nomes que tornariam a busca ambígua.
-export function normalizarNome(texto: string): string {
-  return texto
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 export async function listarNomesExistentes(): Promise<{ nome: string; grupo: string }[]> {
   const supabase = criarClienteAdmin();
 

@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import "./convite-replica.css";
-import type { Convite, Pessoa } from "@/lib/supabase-functions";
-import ChuvaBrilho from "../components/chuva-brilho";
+import { confirmarPresenca, type Convite, type Pessoa } from "@/lib/supabase-functions";
 import CapaEntrada from "./capa-entrada";
 import Foto from "./foto";
 import JanelaConfirmacao from "./janela-confirmacao";
@@ -17,8 +16,11 @@ const CAPA: Imagem = {
   alt: "Laura e Gustavo — O Casamento",
 };
 
-/** Qual das duas imagens do After está visível (a outra fica apagada). */
-type AfterAtivo = "nenhum" | "primeiro" | "segundo";
+/** Qual imagem do After está visível. "apagando" = a confirmada saindo, com
+    350ms de preto antes da tela do After (pela troca automática ou pelo toque). */
+type AfterAtivo = "nenhum" | "primeiro" | "apagando" | "segundo";
+
+const AVISO_FALHA_CONFIRMACAO = "Não conseguimos salvar sua confirmação. Tente de novo.";
 
 function formatarContagem(agora: number | null, alvo: number) {
   let diff = agora === null ? 0 : Math.max(0, alvo - agora);
@@ -32,23 +34,8 @@ function formatarContagem(agora: number | null, alvo: number) {
   return [dias, horas, minutos, segundos].map((n) => String(n).padStart(2, "0"));
 }
 
-/** Copia texto; se a API de clipboard falhar, cai no execCommand como o original. */
-async function copiarTexto(texto: string) {
-  try {
-    await navigator.clipboard.writeText(texto);
-  } catch {
-    const campo = document.createElement("textarea");
-    campo.value = texto;
-    document.body.appendChild(campo);
-    campo.select();
-    try {
-      document.execCommand("copy");
-    } catch {
-      // sem permissão: o original também ignora
-    }
-    campo.remove();
-  }
-}
+/** O que a janela Pix mostra: um presente ou o After. */
+type PixAberto = { nome: string; valor: string; codigo: string; doAfter: boolean };
 
 function Area({ area }: { area: AreaClicavel }) {
   return (
@@ -91,10 +78,13 @@ export default function ConviteReplica() {
   const [confirmando, setConfirmando] = useState(false);
   const [afterAberto, setAfterAberto] = useState(false);
   const [ativo, setAtivo] = useState<AfterAtivo>("nenhum");
-  const [presente, setPresente] = useState<number | null>(null);
+  const [pix, setPix] = useState<PixAberto | null>(null);
+  const [comprovante, setComprovante] = useState(false);
   const [statusPix, setStatusPix] = useState("");
   const [areaPix, setAreaPix] = useState<CSSProperties>({});
   const [after2Carregada, setAfter2Carregada] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const enviandoConfirmacao = useRef(false);
 
   // Antes de entrar, o site (oculto) usa a versão do primeiro horário, então as
   // imagens já carregam durante a capa, como no original.
@@ -122,31 +112,33 @@ export default function ConviteReplica() {
     if (aberto) telas.current[0]?.scrollIntoView({ behavior: "smooth" });
   }, [aberto]);
 
-  // Sequência do After, como no original: com o overlay aberto e as duas
-  // imagens apagadas, deixa o navegador pintar um quadro e acende a
-  // "confirmada" (fade); 5200ms depois do clique ela apaga, e 350ms de preto
-  // depois entra a tela do After.
+  // Sequência do After: com o overlay aberto e as duas imagens apagadas, deixa
+  // o navegador pintar um quadro e acende a "confirmada" (fade). 5200ms depois
+  // do clique ela apaga (se o convidado ainda não tocou nela).
   useEffect(() => {
     if (!afterAberto) return;
     let segundoQuadro = 0;
-    const ids: number[] = [];
     const primeiroQuadro = requestAnimationFrame(() => {
       segundoQuadro = requestAnimationFrame(() => {
         setAtivo((atual) => (atual === "nenhum" ? "primeiro" : atual));
       });
     });
-    ids.push(
-      window.setTimeout(() => {
-        setAtivo("nenhum");
-        ids.push(window.setTimeout(() => setAtivo("segundo"), 350));
-      }, 5200),
-    );
+    const automatico = window.setTimeout(() => {
+      setAtivo((atual) => (atual === "primeiro" || atual === "nenhum" ? "apagando" : atual));
+    }, 5200);
     return () => {
       cancelAnimationFrame(primeiroQuadro);
       cancelAnimationFrame(segundoQuadro);
-      ids.forEach(clearTimeout);
+      clearTimeout(automatico);
     };
   }, [afterAberto]);
+
+  // 350ms de preto entre a "confirmada" e a tela do After.
+  useEffect(() => {
+    if (ativo !== "apagando") return;
+    const id = window.setTimeout(() => setAtivo("segundo"), 350);
+    return () => clearTimeout(id);
+  }, [ativo]);
 
   // Posiciona a área clicável do Pix do After sobre o botão marrom da imagem
   // (em px, a partir da imagem renderizada — igual ao original).
@@ -184,15 +176,24 @@ export default function ConviteReplica() {
     };
   }, [afterAberto, after2Carregada]);
 
-  // Esc fecha o modal Pix.
+  // Esc fecha primeiro a tela do comprovante; com ela fechada, a janela Pix.
   useEffect(() => {
-    if (presente === null) return;
+    if (pix === null && !comprovante) return;
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPresente(null);
+      if (e.key !== "Escape") return;
+      if (comprovante) setComprovante(false);
+      else setPix(null);
     };
     document.addEventListener("keydown", aoTeclar);
     return () => document.removeEventListener("keydown", aoTeclar);
-  }, [presente]);
+  }, [pix, comprovante]);
+
+  // O aviso de falha some sozinho.
+  useEffect(() => {
+    if (!aviso) return;
+    const id = setTimeout(() => setAviso(null), 5000);
+    return () => clearTimeout(id);
+  }, [aviso]);
 
   function abrirAfter() {
     setAtivo("nenhum");
@@ -202,6 +203,7 @@ export default function ConviteReplica() {
   function fecharAfter() {
     setAfterAberto(false);
     setAtivo("nenhum");
+    setComprovante(false);
   }
 
   function atualizarPessoas(gravadas: Pessoa[]) {
@@ -215,31 +217,75 @@ export default function ConviteReplica() {
     abrirAfter();
   }
 
-  async function copiarPresente(pix: string) {
+  // Convite de uma pessoa (a lista do HTML novo): o toque grava direto e abre
+  // o After. Grupo maior: abre a janela com uma caixinha por pessoa.
+  async function confirmarPresencaDireta() {
+    if (!convite || enviandoConfirmacao.current) return;
+    if (convite.pessoas.length !== 1) {
+      setConfirmando(true);
+      return;
+    }
+    enviandoConfirmacao.current = true;
+    setAviso(null);
+    const [pessoa] = convite.pessoas;
     try {
-      await navigator.clipboard.writeText(pix);
-      setStatusPix("Pix Copia e Cola copiado. Agora é só colar no aplicativo do seu banco.");
+      const gravada = await confirmarPresenca(pessoa.id, {
+        ...(convite.perfil === "cerimonia_festa_after" ? { confirmou_cerimonia: true } : {}),
+        confirmou_festa: true,
+      });
+      atualizarPessoas([gravada]);
+      abrirAfter();
+    } catch {
+      setAviso(AVISO_FALHA_CONFIRMACAO);
+    } finally {
+      enviandoConfirmacao.current = false;
+    }
+  }
+
+  // Copia o código da janela Pix. No After, depois de copiar, troca a janela
+  // pela tela do comprovante (180ms), como no HTML novo.
+  async function copiarPix(dados: PixAberto) {
+    let copiado = false;
+    try {
+      await navigator.clipboard.writeText(dados.codigo);
+      copiado = true;
     } catch {
       campoPix.current?.focus();
       campoPix.current?.select();
       try {
-        document.execCommand("copy");
-        setStatusPix("Pix Copia e Cola copiado.");
+        copiado = document.execCommand("copy");
       } catch {
-        setStatusPix("Selecione o código acima e copie manualmente.");
+        copiado = false;
       }
+    }
+    if (!copiado) {
+      setStatusPix("Selecione o código acima e copie manualmente.");
+      return;
+    }
+    setStatusPix("Pix Copia e Cola copiado. Agora é só colar no aplicativo do seu banco.");
+    if (dados.doAfter) {
+      window.setTimeout(() => {
+        setPix(null);
+        setComprovante(true);
+      }, 180);
     }
   }
 
   function abrirPresente(indice: number) {
-    setPresente(indice);
+    const presente = versao.presentes[indice];
+    const dados = { nome: presente.nome, valor: presente.valor, codigo: presente.pix, doAfter: false };
+    setPix(dados);
     setStatusPix("");
-    const pix = versao.presentes[indice].pix;
-    setTimeout(() => copiarPresente(pix), 60);
+    // Os presentes continuam copiando sozinhos ao abrir (decisão do Pedro).
+    setTimeout(() => copiarPix(dados), 60);
+  }
+
+  function abrirPixAfter() {
+    setPix({ nome: "After", valor: versao.valorAfter, codigo: versao.pixAfter, doAfter: true });
+    setStatusPix("");
   }
 
   const [dias, horas, minutos, segundos] = formatarContagem(agora, alvoContagem);
-  const dadosPresente = presente === null ? null : versao.presentes[presente];
   const classeSite = aberto ? " rc-visivel" : "";
 
   return (
@@ -295,7 +341,7 @@ export default function ConviteReplica() {
                 type="button"
                 className="rc-confirmar"
                 aria-label="Confirmar presença"
-                onClick={() => setConfirmando(true)}
+                onClick={confirmarPresencaDireta}
               />
             )}
             <Foto imagem={tela.imagem} />
@@ -303,27 +349,32 @@ export default function ConviteReplica() {
         ))}
       </div>
 
-      {/* Chuva de estrelas por cima das telas (z-index 15): abaixo do After, das
-          janelas e do modal Pix, e sem capturar cliques. Só depois de entrar. */}
-      {aberto && <ChuvaBrilho />}
+      {aviso && (
+        <div className="rc-aviso" role="alert">
+          {aviso}
+        </div>
+      )}
 
       <div className={`rc-after${afterAberto ? " rc-visivel" : ""}`}>
         <button type="button" className="rc-voltar" onClick={fecharAfter}>
           ← Voltar
         </button>
-        <div className={`rc-after-slide rc-after-primeiro${ativo === "primeiro" ? " rc-ativo" : ""}`}>
+        <div
+          className={`rc-after-slide rc-after-primeiro${ativo === "primeiro" ? " rc-ativo" : ""}`}
+          onClick={() => setAtivo((atual) => (atual === "primeiro" ? "apagando" : atual))}
+        >
           <Foto imagem={versao.afterConfirmada} />
         </div>
         <div className={`rc-after-slide rc-after-segundo${ativo === "segundo" ? " rc-ativo" : ""}`}>
           <Foto imagem={versao.after} imgRef={imgAfter2} aoCarregar={() => setAfter2Carregada(true)} />
           <a
             className="rc-pix-area"
-            aria-label="Copiar Pix do After"
+            aria-label="Abrir Pix do After"
             href="#"
             style={areaPix}
             onClick={(e) => {
               e.preventDefault();
-              void copiarTexto(versao.pixAfter);
+              abrirPixAfter();
             }}
           />
         </div>
@@ -340,32 +391,56 @@ export default function ConviteReplica() {
       )}
 
       <div
-        className={`rc-pix-modal${presente !== null ? " rc-mostrar" : ""}`}
-        aria-hidden={presente === null}
+        className={`rc-pix-modal${pix !== null ? " rc-mostrar" : ""}`}
+        aria-hidden={pix === null}
         onClick={(e) => {
-          if (e.target === e.currentTarget) setPresente(null);
+          if (e.target === e.currentTarget) setPix(null);
         }}
       >
         <div className="rc-pix-card" role="dialog" aria-modal="true" aria-labelledby="rc-pix-titulo">
           <h3 id="rc-pix-titulo">PRESENTE SELECIONADO</h3>
-          <div className="rc-pix-nome">{dadosPresente?.nome}</div>
-          <div className="rc-pix-valor">{dadosPresente?.valor}</div>
-          <textarea ref={campoPix} readOnly aria-label="Pix Copia e Cola" value={dadosPresente?.pix ?? ""} />
+          <div className="rc-pix-nome">{pix?.nome}</div>
+          <div className="rc-pix-valor">{pix?.valor}</div>
+          <textarea ref={campoPix} readOnly aria-label="Pix Copia e Cola" value={pix?.codigo ?? ""} />
           <div className="rc-pix-acoes">
-            <button
-              type="button"
-              className="rc-pix-copiar"
-              onClick={() => dadosPresente && copiarPresente(dadosPresente.pix)}
-            >
+            <button type="button" className="rc-pix-copiar" onClick={() => pix && copiarPix(pix)}>
               COPIAR PIX
             </button>
-            <button type="button" className="rc-pix-fechar" onClick={() => setPresente(null)}>
+            <button type="button" className="rc-pix-fechar" onClick={() => setPix(null)}>
               FECHAR
             </button>
           </div>
           <div className="rc-pix-status">{statusPix}</div>
         </div>
       </div>
+
+      {/* Tela do comprovante: montada com o After aberto, para a imagem
+          (1,9 MB) só carregar quando pode ser usada. */}
+      {afterAberto && (
+        <div
+          className={`rc-comprovante${comprovante ? " rc-mostrar" : ""}`}
+          aria-hidden={!comprovante}
+          onClick={(e) => {
+            const alvo = e.target as HTMLElement;
+            if (alvo === e.currentTarget || alvo.classList.contains("rc-comprovante-moldura")) {
+              setComprovante(false);
+            }
+          }}
+        >
+          <div className="rc-comprovante-moldura" role="presentation">
+            <Foto imagem={versao.comprovanteAfter} />
+            <a
+              className="rc-comprovante-whatsapp"
+              href={versao.whatsappComprovante}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Enviar comprovante pelo WhatsApp para 51 99814-6645"
+            >
+              ENVIE O COMPROVANTE AQUI
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
