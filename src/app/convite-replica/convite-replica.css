@@ -423,7 +423,7 @@ body:has(.rc-raiz) {
   font-family: Georgia, serif;
   font-size: 27px;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 .rc-pix-card textarea {
   width: 100%;
@@ -467,6 +467,80 @@ body:has(.rc-raiz) {
   margin-top: 9px;
   font-size: 13px;
   color: #7a4b1a;
+}
+/* O HTML novo define este estilo para uma nota do comprovante e não o usa;
+   mantido igual. */
+.rc-pix-nota {
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0 0 14px;
+  color: #6a421d;
+}
+.rc-pix-nota strong {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Tela do comprovante (depois de copiar o Pix do After) ────────────── */
+.rc-comprovante {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(5px);
+}
+.rc-comprovante.rc-mostrar {
+  display: flex;
+}
+.rc-comprovante-moldura {
+  position: relative;
+  display: inline-block;
+  max-width: 96vw;
+  max-height: 92vh;
+  line-height: 0;
+}
+.rc-comprovante img {
+  display: block;
+  max-width: 96vw;
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55);
+}
+.rc-comprovante-whatsapp {
+  position: absolute;
+  left: 12%;
+  top: 86%;
+  width: 76%;
+  height: 6%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: rgba(92, 55, 27, 0.96);
+  color: #fff4df;
+  text-decoration: none;
+  border: 1px solid rgba(230, 194, 135, 0.95);
+  border-radius: 999px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(12px, 2.5vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.28);
+  z-index: 5;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rc-comprovante-whatsapp:active {
+  transform: scale(0.98);
+  background: rgba(74, 42, 20, 0.98);
 }
 
 /* ── Janela de confirmação de presença ────────────────────────────────── */

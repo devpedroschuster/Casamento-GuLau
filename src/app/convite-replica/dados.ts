@@ -4,6 +4,12 @@
 export const PIX_AFTER =
   "00020101021126750014br.gov.bcb.pix01365e679437-ee49-4dc3-9e96-a347f2ea92650213afterlauraegu520400005303986540585.905802BR5919GUSTAVO DOS S SILVA6012PORTO ALEGRE62070503***63049BC6";
 
+/** Valor mostrado na janela Pix do After (o mesmo do código acima). */
+export const VALOR_AFTER = "R$ 85,90";
+
+/** Link do botão "ENVIE O COMPROVANTE AQUI" (tela depois de copiar o Pix do After). */
+export const WHATSAPP_COMPROVANTE = "https://wa.me/5551998146645";
+
 export type Presente = { nome: string; valor: string; pix: string };
 
 export const PRESENTES: Presente[] = [

@@ -35,23 +35,8 @@ function formatarContagem(agora: number | null, alvo: number) {
   return [dias, horas, minutos, segundos].map((n) => String(n).padStart(2, "0"));
 }
 
-/** Copia texto; se a API de clipboard falhar, cai no execCommand como o original. */
-async function copiarTexto(texto: string) {
-  try {
-    await navigator.clipboard.writeText(texto);
-  } catch {
-    const campo = document.createElement("textarea");
-    campo.value = texto;
-    document.body.appendChild(campo);
-    campo.select();
-    try {
-      document.execCommand("copy");
-    } catch {
-      // sem permissão: o original também ignora
-    }
-    campo.remove();
-  }
-}
+/** O que a janela Pix mostra: um presente ou o After. */
+type PixAberto = { nome: string; valor: string; codigo: string; doAfter: boolean };
 
 function Area({ area }: { area: AreaClicavel }) {
   return (
@@ -94,7 +79,8 @@ export default function ConviteReplica() {
   const [confirmando, setConfirmando] = useState(false);
   const [afterAberto, setAfterAberto] = useState(false);
   const [ativo, setAtivo] = useState<AfterAtivo>("nenhum");
-  const [presente, setPresente] = useState<number | null>(null);
+  const [pix, setPix] = useState<PixAberto | null>(null);
+  const [comprovante, setComprovante] = useState(false);
   const [statusPix, setStatusPix] = useState("");
   const [areaPix, setAreaPix] = useState<CSSProperties>({});
   const [after2Carregada, setAfter2Carregada] = useState(false);
@@ -191,15 +177,17 @@ export default function ConviteReplica() {
     };
   }, [afterAberto, after2Carregada]);
 
-  // Esc fecha o modal Pix.
+  // Esc fecha primeiro a tela do comprovante; com ela fechada, a janela Pix.
   useEffect(() => {
-    if (presente === null) return;
+    if (pix === null && !comprovante) return;
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPresente(null);
+      if (e.key !== "Escape") return;
+      if (comprovante) setComprovante(false);
+      else setPix(null);
     };
     document.addEventListener("keydown", aoTeclar);
     return () => document.removeEventListener("keydown", aoTeclar);
-  }, [presente]);
+  }, [pix, comprovante]);
 
   // O aviso de falha some sozinho.
   useEffect(() => {
@@ -216,6 +204,7 @@ export default function ConviteReplica() {
   function fecharAfter() {
     setAfterAberto(false);
     setAtivo("nenhum");
+    setComprovante(false);
   }
 
   function atualizarPessoas(gravadas: Pessoa[]) {
@@ -254,31 +243,50 @@ export default function ConviteReplica() {
     }
   }
 
-  async function copiarPresente(pix: string) {
+  // Copia o código da janela Pix. No After, depois de copiar, troca a janela
+  // pela tela do comprovante (180ms), como no HTML novo.
+  async function copiarPix(dados: PixAberto) {
+    let copiado = false;
     try {
-      await navigator.clipboard.writeText(pix);
-      setStatusPix("Pix Copia e Cola copiado. Agora é só colar no aplicativo do seu banco.");
+      await navigator.clipboard.writeText(dados.codigo);
+      copiado = true;
     } catch {
       campoPix.current?.focus();
       campoPix.current?.select();
       try {
-        document.execCommand("copy");
-        setStatusPix("Pix Copia e Cola copiado.");
+        copiado = document.execCommand("copy");
       } catch {
-        setStatusPix("Selecione o código acima e copie manualmente.");
+        copiado = false;
       }
+    }
+    if (!copiado) {
+      setStatusPix("Selecione o código acima e copie manualmente.");
+      return;
+    }
+    setStatusPix("Pix Copia e Cola copiado. Agora é só colar no aplicativo do seu banco.");
+    if (dados.doAfter) {
+      window.setTimeout(() => {
+        setPix(null);
+        setComprovante(true);
+      }, 180);
     }
   }
 
   function abrirPresente(indice: number) {
-    setPresente(indice);
+    const presente = versao.presentes[indice];
+    const dados = { nome: presente.nome, valor: presente.valor, codigo: presente.pix, doAfter: false };
+    setPix(dados);
     setStatusPix("");
-    const pix = versao.presentes[indice].pix;
-    setTimeout(() => copiarPresente(pix), 60);
+    // Os presentes continuam copiando sozinhos ao abrir (decisão do Pedro).
+    setTimeout(() => copiarPix(dados), 60);
+  }
+
+  function abrirPixAfter() {
+    setPix({ nome: "After", valor: versao.valorAfter, codigo: versao.pixAfter, doAfter: true });
+    setStatusPix("");
   }
 
   const [dias, horas, minutos, segundos] = formatarContagem(agora, alvoContagem);
-  const dadosPresente = presente === null ? null : versao.presentes[presente];
   const classeSite = aberto ? " rc-visivel" : "";
 
   return (
@@ -366,12 +374,12 @@ export default function ConviteReplica() {
           <Foto imagem={versao.after} imgRef={imgAfter2} aoCarregar={() => setAfter2Carregada(true)} />
           <a
             className="rc-pix-area"
-            aria-label="Copiar Pix do After"
+            aria-label="Abrir Pix do After"
             href="#"
             style={areaPix}
             onClick={(e) => {
               e.preventDefault();
-              void copiarTexto(versao.pixAfter);
+              abrirPixAfter();
             }}
           />
         </div>
@@ -388,32 +396,56 @@ export default function ConviteReplica() {
       )}
 
       <div
-        className={`rc-pix-modal${presente !== null ? " rc-mostrar" : ""}`}
-        aria-hidden={presente === null}
+        className={`rc-pix-modal${pix !== null ? " rc-mostrar" : ""}`}
+        aria-hidden={pix === null}
         onClick={(e) => {
-          if (e.target === e.currentTarget) setPresente(null);
+          if (e.target === e.currentTarget) setPix(null);
         }}
       >
         <div className="rc-pix-card" role="dialog" aria-modal="true" aria-labelledby="rc-pix-titulo">
           <h3 id="rc-pix-titulo">PRESENTE SELECIONADO</h3>
-          <div className="rc-pix-nome">{dadosPresente?.nome}</div>
-          <div className="rc-pix-valor">{dadosPresente?.valor}</div>
-          <textarea ref={campoPix} readOnly aria-label="Pix Copia e Cola" value={dadosPresente?.pix ?? ""} />
+          <div className="rc-pix-nome">{pix?.nome}</div>
+          <div className="rc-pix-valor">{pix?.valor}</div>
+          <textarea ref={campoPix} readOnly aria-label="Pix Copia e Cola" value={pix?.codigo ?? ""} />
           <div className="rc-pix-acoes">
-            <button
-              type="button"
-              className="rc-pix-copiar"
-              onClick={() => dadosPresente && copiarPresente(dadosPresente.pix)}
-            >
+            <button type="button" className="rc-pix-copiar" onClick={() => pix && copiarPix(pix)}>
               COPIAR PIX
             </button>
-            <button type="button" className="rc-pix-fechar" onClick={() => setPresente(null)}>
+            <button type="button" className="rc-pix-fechar" onClick={() => setPix(null)}>
               FECHAR
             </button>
           </div>
           <div className="rc-pix-status">{statusPix}</div>
         </div>
       </div>
+
+      {/* Tela do comprovante: montada com o After aberto, para a imagem
+          (1,9 MB) só carregar quando pode ser usada. */}
+      {afterAberto && (
+        <div
+          className={`rc-comprovante${comprovante ? " rc-mostrar" : ""}`}
+          aria-hidden={!comprovante}
+          onClick={(e) => {
+            const alvo = e.target as HTMLElement;
+            if (alvo === e.currentTarget || alvo.classList.contains("rc-comprovante-moldura")) {
+              setComprovante(false);
+            }
+          }}
+        >
+          <div className="rc-comprovante-moldura" role="presentation">
+            <Foto imagem={versao.comprovanteAfter} />
+            <a
+              className="rc-comprovante-whatsapp"
+              href={versao.whatsappComprovante}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Enviar comprovante pelo WhatsApp para 51 99814-6645"
+            >
+              ENVIE O COMPROVANTE AQUI
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
