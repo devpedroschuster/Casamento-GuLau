@@ -1568,3 +1568,63 @@ git commit -m "Record execution notes in the pix-6 plan"
 - Enviar o arquivo `supabase/functions/buscar-convite/index.ts` para ele publicar no painel do Supabase.
 - Mostrar o relatório do `--simular`; pedir o "ok" para a gravação real (`node --env-file=… scripts/importar-convidados.mjs "$S/convidados-1o-horario.csv"`), que só roda depois da resposta.
 - Oferecer o push/PR (menu do finishing-a-development-branch).
+
+---
+
+## Execução (2026-10-05)
+
+Tasks 1–9 executadas na ordem, um commit por task, mais um commit extra
+(`Drop the unused catch binding in buscar-convite`: `catch {}` em vez de
+`catch (_err)`, que derruba o aviso de lint que a função já tinha — o lint
+caiu de 5 para 4 problemas, todos antigos).
+
+Desvios do plano:
+
+- **Preview:** o `preview_start` lê o `.claude/launch.json` do checkout
+  principal e subiu o servidor dele (porta 3000, com o `.env` do Supabase
+  real) — foi parado na hora, sem uso. O site do worktree rodou com
+  `npm run dev -- -p 3006` em segundo plano e um `.env.local` local
+  (ignorado pelo git) apontando para o servidor falso na 4020.
+- **Teste da função:** o caso "acento, maiúscula e espaços extras" também
+  falhava na função antiga por outro motivo — ela não junta espaços
+  repetidos no meio do nome ("JOÃO   Luiz" dava 404). A nova corrige.
+
+Resultados:
+
+- `npm test`: 4/4. Função em Deno contra PostgREST falso: 8 falhas na versão
+  antiga, 10/10 na nova; `deno check` limpo.
+- `tsc` limpo; lint 4 problemas (3 erros, 1 aviso, todos de antes);
+  `npm run build` verde.
+- Importação `--simular` contra o banco real (só leitura):
+  `CSV: 181 convites, 181 pessoas { cerimonia_festa_after: 181 }` —
+  "Simulação: nenhum conflito. Nada foi gravado."
+- Navegador, 375 px e 1280 px, servidor falso:
+  - capa: ENTRAR a 8% do fundo, apagado (0.55, sem toque) com o campo vazio;
+    campo a 8% + 62px, 78% (+38px de padding/borda) ou 398px, raio 28px,
+    16px; mensagem a 8% + 112px, Georgia 13px com sombra;
+  - "Gil"/"Souza" → "Nome não encontrado…"; digitar apaga a mensagem;
+    falha de rede → mensagem genérica; "gil   SOUZA" entra e fica lembrado;
+    com o falso imitando a função antiga, "Gil" (200 do servidor) é recusado
+    pelo site;
+  - confirmação: Gil (1º horário) grava `confirmou_cerimonia` e
+    `confirmou_festa` numa chamada só mesmo com dois toques e abre o After;
+    Carla (2º) grava só `confirmou_festa`; Hugo (falha) mostra o aviso no pé,
+    não abre o After, aviso some em ~5 s; Ana (grupo de 2) abre a janela;
+  - After: toque na confirmada aos 1016 ms → apaga em 1023 ms, After acende
+    em 1383 ms, sem repetir aos 5,2 s; sem toque: 58 / 5222 / 5584 ms (antes:
+    42 / 5221 / 5571); Voltar e reabrir recomeçam;
+  - Pix do After: janela "PRESENTE SELECIONADO / After / R$ 85,90" com o
+    código do After, sem copiar sozinha; COPIAR → status e, 180 ms depois,
+    tela do comprovante (z-index 10001), imagem 360×540 (375 px) ou 491×736
+    (1280 px); link "ENVIE O COMPROVANTE AQUI" em 12/86/76/6% da imagem,
+    `https://wa.me/5551998146645`, nova aba; tocar na imagem não fecha, tocar
+    fora fecha; Esc fecha o comprovante e depois a janela; cópia que falha →
+    "Selecione o código acima…", sem comprovante; a imagem só é montada com o
+    After aberto;
+  - presentes: continuam copiando sozinhos (status aos 60 ms), sem
+    comprovante; margem do valor 10px;
+  - sem `canvas` de estrelas nem barra de navegação; 7 telas de 568px
+    (sobrepostas 5px), 20 áreas clicáveis; console limpo num fluxo completo.
+
+Pendente com o Pedro: publicar a nova `buscar-convite`, dar o "ok" para a
+gravação real dos 181 nomes e decidir o push/PR.
