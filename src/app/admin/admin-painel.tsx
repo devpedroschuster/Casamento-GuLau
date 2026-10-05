@@ -1,65 +1,83 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type Perfil = "cerimonia_festa_after" | "festa_after";
-type ChaveConfirmacao = "confirmou_cerimonia" | "confirmou_festa" | "confirmou_after";
-
-interface PessoaStatus {
-  id: string;
-  nome: string;
-  checkin_em: string | null;
-  confirmou_cerimonia: boolean | null;
-  confirmou_festa: boolean | null;
-  confirmou_after: boolean | null;
-  status_pagamento_after: "pendente" | "pago" | "nao_aplicavel";
-}
-
-interface ConviteStatus {
-  id: string;
-  nome_exibicao: string;
-  perfil: Perfil;
-  criado_em: string;
-  convidados: PessoaStatus[];
-}
+import { contemNome } from "@/lib/nome-convidado";
+import type { Perfil } from "@/lib/supabase-functions";
+import {
+  calcularResumo,
+  entrou,
+  filtrarPorSituacao,
+  linhasDosConvites,
+  pagouAfter,
+  substituirPessoa,
+  type ConviteStatus,
+  type Contagem,
+  type Filtro,
+  type LinhaConvidado,
+  type PessoaStatus,
+} from "./resumo";
 
 const LABEL_PERFIL: Record<Perfil, string> = {
   cerimonia_festa_after: "Cerimônia + Jantar + Festa",
   festa_after: "Só Festa/After",
 };
 
-const ETAPAS_POR_PERFIL: Record<Perfil, { chave: ChaveConfirmacao; label: string }[]> = {
-  cerimonia_festa_after: [
-    { chave: "confirmou_cerimonia", label: "Cerimônia" },
-    { chave: "confirmou_festa", label: "Festa" },
-    { chave: "confirmou_after", label: "After" },
-  ],
-  festa_after: [
-    { chave: "confirmou_festa", label: "Festa" },
-    { chave: "confirmou_after", label: "After" },
-  ],
+const HORARIO: Record<Perfil, string> = {
+  cerimonia_festa_after: "1º horário",
+  festa_after: "2º horário",
 };
 
-function formatarCheckin(iso: string | null) {
-  if (!iso) return "Ainda não";
-  const data = new Date(iso);
-  const dia = data.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "America/Sao_Paulo",
-  });
-  const hora = data.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "America/Sao_Paulo",
-  });
-  return `Fez check-in em ${dia} às ${hora}`;
+const FILTROS: { valor: Filtro; rotulo: string }[] = [
+  { valor: "todos", rotulo: "Todos" },
+  { valor: "confirmaram", rotulo: "Confirmaram" },
+  { valor: "after_pago", rotulo: "After pago" },
+  { valor: "falta_pagar", rotulo: "Falta pagar" },
+];
+
+function textoConfirmacao(p: PessoaStatus) {
+  if (p.confirmou_festa === true) return "confirmou";
+  if (p.confirmou_festa === false) return "não vai";
+  return "não confirmou";
 }
 
-function simboloConfirmacao(valor: boolean | null) {
-  if (valor === true) return "✓";
-  if (valor === false) return "✗";
-  return "—";
+function TabelaResumo({ linhas }: { linhas: LinhaConvidado[] }) {
+  const resumo = calcularResumo(linhas);
+  const linhasTabela: [string, Contagem][] = [
+    ["1º horário", resumo.primeiro],
+    ["2º horário", resumo.segundo],
+    ["Total", resumo.total],
+  ];
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm tabular-nums">
+        <thead>
+          <tr className="text-xs text-platinum">
+            <th className="pb-2 text-left font-normal" />
+            <th className="pb-2 pl-2 text-right font-normal">Convidados</th>
+            <th className="pb-2 pl-2 text-right font-normal">Entraram</th>
+            <th className="pb-2 pl-2 text-right font-normal">Confirmaram</th>
+            <th className="pb-2 pl-2 text-right font-normal">After pago</th>
+          </tr>
+        </thead>
+        <tbody>
+          {linhasTabela.map(([rotulo, c]) => (
+            <tr
+              key={rotulo}
+              className={`border-t border-champagne/30${rotulo === "Total" ? " font-semibold" : ""}`}
+            >
+              <th scope="row" className="py-2 text-left font-[inherit] whitespace-nowrap">
+                {rotulo}
+              </th>
+              <td className="py-2 pl-2 text-right">{c.convidados}</td>
+              <td className="py-2 pl-2 text-right">{c.entraram}</td>
+              <td className="py-2 pl-2 text-right">{c.confirmaram}</td>
+              <td className="py-2 pl-2 text-right">{c.afterPago}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export default function AdminPainel() {
@@ -67,6 +85,12 @@ export default function AdminPainel() {
   const [carregando, setCarregando] = useState(true);
   const [erroLista, setErroLista] = useState<string | null>(null);
 
+  const [busca, setBusca] = useState("");
+  const [filtro, setFiltro] = useState<Filtro>("todos");
+  const [salvando, setSalvando] = useState<Record<string, boolean>>({});
+  const [erroAfter, setErroAfter] = useState<string | null>(null);
+
+  const [formAberto, setFormAberto] = useState(false);
   const [nomeExibicao, setNomeExibicao] = useState("");
   const [perfil, setPerfil] = useState<Perfil>("cerimonia_festa_after");
   const [nomes, setNomes] = useState([""]);
@@ -88,10 +112,55 @@ export default function AdminPainel() {
     buscarLista();
   }, []);
 
+  // O aviso de falha ao salvar o After some sozinho.
+  useEffect(() => {
+    if (!erroAfter) return;
+    const id = setTimeout(() => setErroAfter(null), 6000);
+    return () => clearTimeout(id);
+  }, [erroAfter]);
+
   function handleTentarDeNovo() {
     setCarregando(true);
     setErroLista(null);
     buscarLista();
+  }
+
+  // Um toque marca o After pago (presença confirmada no After); outro toque
+  // desfaz. A tela muda na hora e volta atrás se a gravação falhar.
+  async function alternarAfter(linha: LinhaConvidado) {
+    if (salvando[linha.id]) return;
+    const pago = !pagouAfter(linha);
+    const anterior: Partial<PessoaStatus> = {
+      confirmou_after: linha.confirmou_after,
+      status_pagamento_after: linha.status_pagamento_after,
+    };
+    setErroAfter(null);
+    setSalvando((s) => ({ ...s, [linha.id]: true }));
+    setConvites((c) =>
+      substituirPessoa(c, linha.id, {
+        confirmou_after: pago ? true : null,
+        status_pagamento_after: pago ? "pago" : "nao_aplicavel",
+      }),
+    );
+    try {
+      const res = await fetch(`/api/admin/convidados/${linha.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pago }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao salvar");
+      setConvites((c) => substituirPessoa(c, linha.id, data.convidado));
+    } catch {
+      setConvites((c) => substituirPessoa(c, linha.id, anterior));
+      setErroAfter(`Não foi possível salvar o After de ${linha.nome}. Tente de novo.`);
+    } finally {
+      setSalvando((s) => {
+        const resto = { ...s };
+        delete resto[linha.id];
+        return resto;
+      });
+    }
   }
 
   function handleNomeChange(indice: number, valor: string) {
@@ -126,6 +195,7 @@ export default function AdminPainel() {
       setNomeExibicao("");
       setPerfil("cerimonia_festa_after");
       setNomes([""]);
+      setFormAberto(false);
     } catch (e) {
       setErroFormulario(e instanceof Error ? e.message : "Erro ao salvar o novo grupo");
     } finally {
@@ -133,133 +203,194 @@ export default function AdminPainel() {
     }
   }
 
+  const linhas = linhasDosConvites(convites);
+  const visiveis = filtrarPorSituacao(linhas, filtro).filter((l) => contemNome(l.nome, busca));
+
   return (
-    <main className="min-h-screen max-w-3xl mx-auto px-6 py-16 space-y-12 text-ivory">
+    <main className="min-h-screen max-w-3xl mx-auto px-4 py-8 sm:px-6 sm:py-16 space-y-10 text-ivory">
       <h1 className="text-2xl font-display">Admin — convidados</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 border border-champagne/30 rounded-sm p-6">
-        <h2 className="text-lg">Cadastrar novo grupo</h2>
-
-        <div className="space-y-1">
-          <label className="text-sm text-platinum/80">Nome do grupo</label>
-          <input
-            type="text"
-            required
-            value={nomeExibicao}
-            onChange={(e) => setNomeExibicao(e.target.value)}
-            placeholder="Ex: Pedro Schuster e Aléxia Chaves"
-            className="w-full rounded-sm border border-champagne/30 bg-white/5 px-4 py-2 text-ivory placeholder:text-platinum/40 focus:outline-none focus:ring-1 focus:ring-champagne"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm text-platinum/80">Lista</label>
-          <select
-            value={perfil}
-            onChange={(e) => setPerfil(e.target.value as Perfil)}
-            className="w-full rounded-sm border border-champagne/30 bg-white/5 px-4 py-2 text-ivory focus:outline-none focus:ring-1 focus:ring-champagne"
-          >
-            <option value="cerimonia_festa_after">{LABEL_PERFIL.cerimonia_festa_after}</option>
-            <option value="festa_after">{LABEL_PERFIL.festa_after}</option>
-          </select>
-        </div>
-
+      {carregando && <p className="text-platinum">Carregando...</p>}
+      {erroLista && (
         <div className="space-y-2">
-          <label className="text-sm text-platinum/80">Pessoas do grupo</label>
-          {nomes.map((nome, indice) => (
-            <div key={indice} className="flex gap-2">
-              <input
-                type="text"
-                value={nome}
-                onChange={(e) => handleNomeChange(indice, e.target.value)}
-                placeholder="Nome da pessoa"
-                className="flex-1 rounded-sm border border-champagne/30 bg-white/5 px-4 py-2 text-ivory placeholder:text-platinum/40 focus:outline-none focus:ring-1 focus:ring-champagne"
-              />
-              {nomes.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoverPessoa(indice)}
-                  className="px-3 text-platinum/60 hover:text-rose-gold"
-                >
-                  remover
-                </button>
-              )}
-            </div>
-          ))}
-          <button type="button" onClick={handleAdicionarPessoa} className="text-sm text-champagne hover:underline">
-            + adicionar pessoa
+          <p className="text-rose-gold text-sm">{erroLista}</p>
+          <button onClick={handleTentarDeNovo} className="text-sm text-champagne hover:underline">
+            Tentar de novo
           </button>
         </div>
+      )}
 
-        {erroFormulario && <p className="text-rose-gold text-sm">{erroFormulario}</p>}
+      {!carregando && !erroLista && (
+        <>
+          <section className="space-y-3">
+            <h2 className="text-lg">Resumo</h2>
+            <TabelaResumo linhas={linhas} />
+          </section>
 
-        <button
-          type="submit"
-          disabled={enviando || !podeEnviar}
-          className="btn-metal px-6 py-2 rounded-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {enviando ? "Salvando..." : "Cadastrar grupo"}
-        </button>
-      </form>
+          <section className="space-y-4">
+            <h2 className="text-lg">
+              Convidados{" "}
+              <span className="text-sm text-platinum">
+                ({visiveis.length} de {linhas.length})
+              </span>
+            </h2>
 
-      <section className="space-y-6">
-        <h2 className="text-lg">Grupos cadastrados</h2>
+            <input
+              type="search"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar convidado"
+              aria-label="Buscar convidado"
+              className="w-full rounded-sm border border-champagne/50 bg-white/60 px-4 py-3 text-base text-ivory placeholder:text-platinum focus:outline-none focus:ring-1 focus:ring-champagne"
+            />
 
-        {carregando && <p className="text-platinum/60">Carregando...</p>}
-        {erroLista && (
-          <div className="space-y-2">
-            <p className="text-rose-gold text-sm">{erroLista}</p>
-            <button onClick={handleTentarDeNovo} className="text-sm text-champagne hover:underline">
-              Tentar de novo
-            </button>
-          </div>
-        )}
-
-        {!carregando && !erroLista && convites.length === 0 && (
-          <p className="text-platinum/60">Nenhum grupo cadastrado ainda.</p>
-        )}
-
-        {convites.map((convite) => (
-          <div key={convite.id} className="border border-champagne/20 rounded-sm p-4 space-y-3">
-            <div>
-              <p className="font-medium">{convite.nome_exibicao}</p>
-              <p className="text-xs text-platinum/60">{LABEL_PERFIL[convite.perfil]}</p>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar convidados">
+              {FILTROS.map((f) => (
+                <button
+                  key={f.valor}
+                  type="button"
+                  aria-pressed={filtro === f.valor}
+                  onClick={() => setFiltro(f.valor)}
+                  className={`min-h-10 rounded-full px-3 text-sm ${
+                    filtro === f.valor ? "bg-ivory text-creme" : "border border-champagne/50 text-ivory"
+                  }`}
+                >
+                  {f.rotulo} ({filtrarPorSituacao(linhas, f.valor).length})
+                </button>
+              ))}
             </div>
 
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-platinum/60">
-                  <th className="font-normal pb-2 pr-4">Pessoa</th>
-                  <th className="font-normal pb-2 pr-4">Check-in</th>
-                  {ETAPAS_POR_PERFIL[convite.perfil].map((etapa) => (
-                    <th key={etapa.label} className="font-normal pb-2 pr-4">
-                      {etapa.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {convite.convidados.map((pessoa) => (
-                  <tr key={pessoa.id} className="border-t border-champagne/10">
-                    <td className="py-2 pr-4">{pessoa.nome}</td>
-                    <td className="py-2 pr-4">{formatarCheckin(pessoa.checkin_em)}</td>
-                    {ETAPAS_POR_PERFIL[convite.perfil].map((etapa) => (
-                      <td key={etapa.label} className="py-2 pr-4">
-                        {simboloConfirmacao(pessoa[etapa.chave])}
-                        {etapa.chave === "confirmou_after" &&
-                          (pessoa.status_pagamento_after === "pendente" ||
-                            pessoa.status_pagamento_after === "pago") && (
-                            <span className="text-xs text-platinum/60"> · {pessoa.status_pagamento_after}</span>
-                          )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
+            {linhas.length === 0 && <p className="text-platinum">Nenhum convidado cadastrado ainda.</p>}
+            {linhas.length > 0 && visiveis.length === 0 && (
+              <p className="text-platinum">Ninguém encontrado com esse filtro.</p>
+            )}
+
+            <ul>
+              {visiveis.map((l) => {
+                const pago = pagouAfter(l);
+                return (
+                  <li key={l.id} className="flex items-center gap-3 border-t border-champagne/30 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate">{l.nome}</p>
+                      <p className="text-xs text-platinum">
+                        {HORARIO[l.perfil]} · {entrou(l) ? "entrou" : "não entrou"} · {textoConfirmacao(l)}
+                        {l.tamanhoGrupo > 1 && ` · ${l.grupo}`}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      aria-pressed={pago}
+                      aria-label={`${pago ? "Desmarcar" : "Marcar"} After pago de ${l.nome}`}
+                      disabled={salvando[l.id]}
+                      onClick={() => alternarAfter(l)}
+                      className={`min-h-11 shrink-0 rounded-sm px-3 text-sm whitespace-nowrap disabled:opacity-60 ${
+                        pago ? "bg-champagne font-semibold text-onyx" : "border border-champagne text-ivory"
+                      }`}
+                    >
+                      {salvando[l.id] ? "salvando…" : pago ? "✓ After pago" : "Marcar After pago"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </>
+      )}
+
+      <section className="space-y-4">
+        {!formAberto ? (
+          <button
+            type="button"
+            onClick={() => setFormAberto(true)}
+            className="min-h-11 text-sm text-ivory underline-offset-4 hover:underline"
+          >
+            + Cadastrar novo grupo
+          </button>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 border border-champagne/30 rounded-sm p-6">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg">Cadastrar novo grupo</h2>
+              <button
+                type="button"
+                onClick={() => setFormAberto(false)}
+                className="min-h-11 text-sm text-platinum hover:underline"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-platinum">Nome do grupo</label>
+              <input
+                type="text"
+                required
+                value={nomeExibicao}
+                onChange={(e) => setNomeExibicao(e.target.value)}
+                placeholder="Ex: Pedro Schuster e Aléxia Chaves"
+                className="w-full rounded-sm border border-champagne/30 bg-white/5 px-4 py-2 text-ivory placeholder:text-platinum/40 focus:outline-none focus:ring-1 focus:ring-champagne"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-platinum">Lista</label>
+              <select
+                value={perfil}
+                onChange={(e) => setPerfil(e.target.value as Perfil)}
+                className="w-full rounded-sm border border-champagne/30 bg-white/5 px-4 py-2 text-ivory focus:outline-none focus:ring-1 focus:ring-champagne"
+              >
+                <option value="cerimonia_festa_after">{LABEL_PERFIL.cerimonia_festa_after}</option>
+                <option value="festa_after">{LABEL_PERFIL.festa_after}</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-platinum">Pessoas do grupo</label>
+              {nomes.map((nome, indice) => (
+                <div key={indice} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={nome}
+                    onChange={(e) => handleNomeChange(indice, e.target.value)}
+                    placeholder="Nome da pessoa"
+                    className="flex-1 rounded-sm border border-champagne/30 bg-white/5 px-4 py-2 text-ivory placeholder:text-platinum/40 focus:outline-none focus:ring-1 focus:ring-champagne"
+                  />
+                  {nomes.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoverPessoa(indice)}
+                      className="px-3 text-platinum hover:text-rose-gold"
+                    >
+                      remover
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={handleAdicionarPessoa} className="text-sm text-champagne hover:underline">
+                + adicionar pessoa
+              </button>
+            </div>
+
+            {erroFormulario && <p className="text-rose-gold text-sm">{erroFormulario}</p>}
+
+            <button
+              type="submit"
+              disabled={enviando || !podeEnviar}
+              className="btn-metal px-6 py-2 rounded-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {enviando ? "Salvando..." : "Cadastrar grupo"}
+            </button>
+          </form>
+        )}
       </section>
+
+      {erroAfter && (
+        <p
+          role="alert"
+          className="fixed inset-x-4 bottom-4 z-10 mx-auto max-w-md rounded-full bg-onyx px-4 py-3 text-center text-sm text-creme shadow-lg"
+        >
+          {erroAfter}
+        </p>
+      )}
     </main>
   );
 }
