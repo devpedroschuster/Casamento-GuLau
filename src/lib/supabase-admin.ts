@@ -69,6 +69,29 @@ export async function listarConvitesAdmin(): Promise<ConviteAdmin[]> {
   return (data ?? []) as unknown as ConviteAdmin[];
 }
 
+/** Marca (ou desmarca) o After pago de uma pessoa: o noivo faz isso no /admin
+    quando recebe o comprovante. Desmarcar volta para "sem After". Devolve null
+    se a pessoa não existe. */
+export async function marcarAfterPago(id: string, pago: boolean): Promise<Pessoa | null> {
+  const supabase = criarClienteAdmin();
+
+  const { data, error } = await supabase
+    .from("convidados")
+    .update({
+      confirmou_after: pago ? true : null,
+      status_pagamento_after: pago ? "pago" : "nao_aplicavel",
+    })
+    .eq("id", id)
+    .select(COLUNAS_CONVIDADO)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error("Erro ao salvar o After: " + error.message);
+  }
+
+  return data as unknown as Pessoa | null;
+}
+
 export async function criarConviteAdmin(params: {
   nome_exibicao: string;
   perfil: Perfil;

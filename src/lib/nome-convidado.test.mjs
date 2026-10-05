@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mesmoNome, nomesJaExistentes, nomesRepetidos, normalizarNome } from "./nome-convidado.ts";
+import { contemNome, mesmoNome, nomesJaExistentes, nomesRepetidos, normalizarNome } from "./nome-convidado.ts";
 
 test("normalizarNome tira acento, maiúscula e espaços extras", () => {
   assert.equal(normalizarNome("  João   Luiz da Silva ARAGÃO "), "joao luiz da silva aragao");
@@ -14,6 +14,13 @@ test("mesmoNome exige o nome inteiro", () => {
   assert.ok(!mesmoNome("Aragão", "João Luiz da Silva Aragão"));
   assert.ok(!mesmoNome("", ""));
   assert.ok(!mesmoNome("   ", " "));
+});
+
+test("contemNome acha pedaço do nome, sem acento e maiúscula", () => {
+  assert.ok(contemNome("João Luiz da Silva Aragão", "aragao"));
+  assert.ok(contemNome("João Luiz da Silva Aragão", "  LUIZ   da "));
+  assert.ok(contemNome("João Luiz", ""));
+  assert.ok(!contemNome("João Luiz", "pedro"));
 });
 
 test("nomesJaExistentes acha só nomes iguais", () => {

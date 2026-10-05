@@ -18,6 +18,11 @@ export function mesmoNome(a: string, b: string): boolean {
   return normalizado.length > 0 && normalizado === normalizarNome(b);
 }
 
+/** O nome contém o texto buscado (busca do /admin). Busca vazia acha todos. */
+export function contemNome(nome: string, busca: string): boolean {
+  return normalizarNome(nome).includes(normalizarNome(busca));
+}
+
 export type NomeExistente = { nome: string; grupo: string };
 
 /** Nomes novos que já existem na lista (mesmo nome normalizado). */

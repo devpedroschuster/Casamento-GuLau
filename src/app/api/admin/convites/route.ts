@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import {
   listarConvitesAdmin,
   criarConviteAdmin,
@@ -6,22 +5,11 @@ import {
 } from "@/lib/supabase-admin";
 import { nomesJaExistentes, normalizarNome } from "@/lib/nome-convidado";
 import type { Perfil } from "@/lib/supabase-functions";
+import { jsonSeguro } from "../json-seguro";
 
 const PERFIS_VALIDOS: Perfil[] = ["cerimonia_festa_after", "festa_after"];
 const MAX_CARACTERES = 120;
 const MAX_PESSOAS = 30;
-
-// Toda resposta desta rota (sucesso ou erro) sai sem cache e fora dos buscadores:
-// a página /admin não tem login, só não é divulgada.
-function jsonSeguro(body: unknown, status = 200) {
-  return NextResponse.json(body, {
-    status,
-    headers: {
-      "Cache-Control": "no-store",
-      "X-Robots-Tag": "noindex, nofollow",
-    },
-  });
-}
 
 // Remove espaços nas pontas e colapsa qualquer sequência de espaços em um só,
 // mantendo maiúsculas e acentos originais (é o que fica salvo no banco).
