@@ -19,6 +19,17 @@ export interface Convite {
   pessoas: Pessoa[];
 }
 
+/** Erro devolvido por uma Edge Function, com o status HTTP da resposta. */
+export class ErroFuncao extends Error {
+  status: number;
+
+  constructor(mensagem: string, status: number) {
+    super(mensagem);
+    this.name = "ErroFuncao";
+    this.status = status;
+  }
+}
+
 const FUNCTIONS_URL = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL!;
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -35,7 +46,7 @@ async function callFunction<T>(name: string, body: Record<string, unknown>): Pro
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.error || "Erro ao chamar função");
+    throw new ErroFuncao(data.error || "Erro ao chamar função", res.status);
   }
 
   return data;

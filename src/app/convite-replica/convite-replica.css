@@ -46,20 +46,23 @@ body:has(.rc-raiz) {
   height: 100%;
   object-fit: cover;
 }
-/* Entrada da capa: campo de nome + ENTRAR, ancorados em 8% do fundo. O ENTRAR
-   continua na mesma posição do original; o campo e o erro empilham acima dele. */
+/* Entrada da capa (HTML novo): ENTRAR a 8% do fundo, o campo 62px acima e a
+   mensagem 112px acima, centralizados como no original (filhos absolutos de
+   um contêiner flex centralizado do tamanho da capa). */
 .rc-entrada {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 8%;
+  inset: 0;
   z-index: 3;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  justify-content: center;
+  pointer-events: none;
+}
+.rc-entrada > * {
+  pointer-events: auto;
 }
 .rc-entrar {
+  position: absolute;
+  bottom: 8%;
   padding: 15px 42px;
   border: 1px solid white;
   border-radius: 40px;
@@ -68,39 +71,50 @@ body:has(.rc-raiz) {
   letter-spacing: 4px;
   font-size: 15px;
 }
+/* Apagado com o campo vazio (placeholder à mostra) e durante a busca. */
+.rc-entrada-campo:placeholder-shown ~ .rc-entrar {
+  opacity: 0.55;
+  pointer-events: none;
+}
 .rc-entrar:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 .rc-entrada-campo {
-  width: min(78vw, 300px);
-  padding: 13px 20px;
-  border: 1px solid white;
-  border-radius: 40px;
+  position: absolute;
+  bottom: calc(8% + 62px);
+  /* o original não tem reset: a largura é do conteúdo; padding e borda somam */
+  box-sizing: content-box;
+  width: min(78%, 360px);
+  padding: 13px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 28px;
   background: rgba(20, 12, 6, 0.45);
   color: white;
-  font: 16px Arial, sans-serif;
-  letter-spacing: 1px;
   text-align: center;
+  /* fonte padrão do navegador, como no original; 16px em vez de 15px para o
+     iPhone não dar zoom ao focar */
+  font: revert;
+  font-size: 16px;
+  outline: none;
   appearance: none;
 }
 .rc-entrada-campo::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
   opacity: 1;
 }
 .rc-entrada-campo:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
-}
-.rc-entrada-campo:disabled {
-  opacity: 0.6;
+  background: rgba(20, 12, 6, 0.58);
 }
 .rc-entrada-erro {
+  position: absolute;
+  bottom: calc(8% + 112px);
+  width: min(82%, 380px);
   margin: 0;
-  max-width: min(86vw, 320px);
   text-align: center;
-  color: white;
-  font: 14px/1.35 Arial, sans-serif;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 10px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.35;
+  text-shadow: 0 1px 4px #000;
 }
 
 /* Névoa de energia dourada — uma corrente difusa atravessando o véu, do L ao G */
