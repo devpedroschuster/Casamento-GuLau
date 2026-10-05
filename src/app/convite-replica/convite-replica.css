@@ -345,8 +345,17 @@ body:has(.rc-raiz) {
 .rc-after-primeiro {
   z-index: 2;
 }
+/* Como no HTML novo: a "confirmada" recebe toque (pula para o After) e a tela
+   do After, acesa, também. */
+.rc-after-primeiro.rc-ativo {
+  pointer-events: auto;
+  cursor: pointer;
+}
 .rc-after-segundo {
   z-index: 1;
+}
+.rc-after-segundo.rc-ativo {
+  pointer-events: auto;
 }
 .rc-voltar {
   position: fixed;

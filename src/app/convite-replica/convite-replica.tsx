@@ -17,8 +17,9 @@ const CAPA: Imagem = {
   alt: "Laura e Gustavo — O Casamento",
 };
 
-/** Qual das duas imagens do After está visível (a outra fica apagada). */
-type AfterAtivo = "nenhum" | "primeiro" | "segundo";
+/** Qual imagem do After está visível. "apagando" = a confirmada saindo, com
+    350ms de preto antes da tela do After (pela troca automática ou pelo toque). */
+type AfterAtivo = "nenhum" | "primeiro" | "apagando" | "segundo";
 
 const AVISO_FALHA_CONFIRMACAO = "Não conseguimos salvar sua confirmação. Tente de novo.";
 
@@ -126,31 +127,33 @@ export default function ConviteReplica() {
     if (aberto) telas.current[0]?.scrollIntoView({ behavior: "smooth" });
   }, [aberto]);
 
-  // Sequência do After, como no original: com o overlay aberto e as duas
-  // imagens apagadas, deixa o navegador pintar um quadro e acende a
-  // "confirmada" (fade); 5200ms depois do clique ela apaga, e 350ms de preto
-  // depois entra a tela do After.
+  // Sequência do After: com o overlay aberto e as duas imagens apagadas, deixa
+  // o navegador pintar um quadro e acende a "confirmada" (fade). 5200ms depois
+  // do clique ela apaga (se o convidado ainda não tocou nela).
   useEffect(() => {
     if (!afterAberto) return;
     let segundoQuadro = 0;
-    const ids: number[] = [];
     const primeiroQuadro = requestAnimationFrame(() => {
       segundoQuadro = requestAnimationFrame(() => {
         setAtivo((atual) => (atual === "nenhum" ? "primeiro" : atual));
       });
     });
-    ids.push(
-      window.setTimeout(() => {
-        setAtivo("nenhum");
-        ids.push(window.setTimeout(() => setAtivo("segundo"), 350));
-      }, 5200),
-    );
+    const automatico = window.setTimeout(() => {
+      setAtivo((atual) => (atual === "primeiro" || atual === "nenhum" ? "apagando" : atual));
+    }, 5200);
     return () => {
       cancelAnimationFrame(primeiroQuadro);
       cancelAnimationFrame(segundoQuadro);
-      ids.forEach(clearTimeout);
+      clearTimeout(automatico);
     };
   }, [afterAberto]);
+
+  // 350ms de preto entre a "confirmada" e a tela do After.
+  useEffect(() => {
+    if (ativo !== "apagando") return;
+    const id = window.setTimeout(() => setAtivo("segundo"), 350);
+    return () => clearTimeout(id);
+  }, [ativo]);
 
   // Posiciona a área clicável do Pix do After sobre o botão marrom da imagem
   // (em px, a partir da imagem renderizada — igual ao original).
@@ -353,7 +356,10 @@ export default function ConviteReplica() {
         <button type="button" className="rc-voltar" onClick={fecharAfter}>
           ← Voltar
         </button>
-        <div className={`rc-after-slide rc-after-primeiro${ativo === "primeiro" ? " rc-ativo" : ""}`}>
+        <div
+          className={`rc-after-slide rc-after-primeiro${ativo === "primeiro" ? " rc-ativo" : ""}`}
+          onClick={() => setAtivo((atual) => (atual === "primeiro" ? "apagando" : atual))}
+        >
           <Foto imagem={versao.afterConfirmada} />
         </div>
         <div className={`rc-after-slide rc-after-segundo${ativo === "segundo" ? " rc-ativo" : ""}`}>
