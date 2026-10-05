@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import "./convite-replica.css";
-import type { Convite, Pessoa } from "@/lib/supabase-functions";
+import { confirmarPresenca, type Convite, type Pessoa } from "@/lib/supabase-functions";
 import ChuvaBrilho from "../components/chuva-brilho";
 import CapaEntrada from "./capa-entrada";
 import Foto from "./foto";
@@ -19,6 +19,8 @@ const CAPA: Imagem = {
 
 /** Qual das duas imagens do After está visível (a outra fica apagada). */
 type AfterAtivo = "nenhum" | "primeiro" | "segundo";
+
+const AVISO_FALHA_CONFIRMACAO = "Não conseguimos salvar sua confirmação. Tente de novo.";
 
 function formatarContagem(agora: number | null, alvo: number) {
   let diff = agora === null ? 0 : Math.max(0, alvo - agora);
@@ -95,6 +97,8 @@ export default function ConviteReplica() {
   const [statusPix, setStatusPix] = useState("");
   const [areaPix, setAreaPix] = useState<CSSProperties>({});
   const [after2Carregada, setAfter2Carregada] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const enviandoConfirmacao = useRef(false);
 
   // Antes de entrar, o site (oculto) usa a versão do primeiro horário, então as
   // imagens já carregam durante a capa, como no original.
@@ -194,6 +198,13 @@ export default function ConviteReplica() {
     return () => document.removeEventListener("keydown", aoTeclar);
   }, [presente]);
 
+  // O aviso de falha some sozinho.
+  useEffect(() => {
+    if (!aviso) return;
+    const id = setTimeout(() => setAviso(null), 5000);
+    return () => clearTimeout(id);
+  }, [aviso]);
+
   function abrirAfter() {
     setAtivo("nenhum");
     setAfterAberto(true);
@@ -213,6 +224,31 @@ export default function ConviteReplica() {
   function concluirConfirmacao() {
     setConfirmando(false);
     abrirAfter();
+  }
+
+  // Convite de uma pessoa (a lista do HTML novo): o toque grava direto e abre
+  // o After. Grupo maior: abre a janela com uma caixinha por pessoa.
+  async function confirmarPresencaDireta() {
+    if (!convite || enviandoConfirmacao.current) return;
+    if (convite.pessoas.length !== 1) {
+      setConfirmando(true);
+      return;
+    }
+    enviandoConfirmacao.current = true;
+    setAviso(null);
+    const [pessoa] = convite.pessoas;
+    try {
+      const gravada = await confirmarPresenca(pessoa.id, {
+        ...(convite.perfil === "cerimonia_festa_after" ? { confirmou_cerimonia: true } : {}),
+        confirmou_festa: true,
+      });
+      atualizarPessoas([gravada]);
+      abrirAfter();
+    } catch {
+      setAviso(AVISO_FALHA_CONFIRMACAO);
+    } finally {
+      enviandoConfirmacao.current = false;
+    }
   }
 
   async function copiarPresente(pix: string) {
@@ -295,7 +331,7 @@ export default function ConviteReplica() {
                 type="button"
                 className="rc-confirmar"
                 aria-label="Confirmar presença"
-                onClick={() => setConfirmando(true)}
+                onClick={confirmarPresencaDireta}
               />
             )}
             <Foto imagem={tela.imagem} />
@@ -306,6 +342,12 @@ export default function ConviteReplica() {
       {/* Chuva de estrelas por cima das telas (z-index 15): abaixo do After, das
           janelas e do modal Pix, e sem capturar cliques. Só depois de entrar. */}
       {aberto && <ChuvaBrilho />}
+
+      {aviso && (
+        <div className="rc-aviso" role="alert">
+          {aviso}
+        </div>
+      )}
 
       <div className={`rc-after${afterAberto ? " rc-visivel" : ""}`}>
         <button type="button" className="rc-voltar" onClick={fecharAfter}>
