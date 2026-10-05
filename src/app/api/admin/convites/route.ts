@@ -3,8 +3,8 @@ import {
   listarConvitesAdmin,
   criarConviteAdmin,
   listarNomesExistentes,
-  normalizarNome,
 } from "@/lib/supabase-admin";
+import { nomesJaExistentes, normalizarNome } from "@/lib/nome-convidado";
 import type { Perfil } from "@/lib/supabase-functions";
 
 const PERFIS_VALIDOS: Perfil[] = ["cerimonia_festa_after", "festa_after"];
@@ -82,28 +82,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    // A busca pública (buscar-convite) responde "digite o nome completo" quando o
-    // texto bate com pessoas de mais de um grupo (comparação por "contém"). Então
-    // um nome novo não pode conter, nem estar contido, em nome de OUTRO grupo.
-    // Nomes dentro do mesmo grupo novo podem se sobrepor livremente.
+    // A busca pública (buscar-convite) exige o nome completo, sem diferenciar
+    // acento e maiúscula: só um nome IGUAL ao de outro grupo deixaria a busca
+    // ambígua.
     const existentes = await listarNomesExistentes();
-    const existentesNormalizados = existentes
-      .map((e) => ({ ...e, normalizado: normalizarNome(e.nome) }))
-      .filter((e) => e.normalizado.length > 0);
-
-    for (const nome of nomes) {
-      const novo = normalizarNome(nome);
-      const conflito = existentesNormalizados.find(
-        (e) => e.normalizado.includes(novo) || novo.includes(e.normalizado),
+    const [conflito] = nomesJaExistentes(nomes, existentes);
+    if (conflito) {
+      return jsonSeguro(
+        {
+          error: `O nome "${conflito.nome}" já existe no grupo "${conflito.existente.grupo}". Diferencie os nomes.`,
+        },
+        409,
       );
-      if (conflito) {
-        return jsonSeguro(
-          {
-            error: `O nome "${nome}" conflita com "${conflito.nome}" (grupo "${conflito.grupo}"): um contém o outro, então a busca dos convidados ficaria ambígua. Use o nome completo ou diferencie os nomes.`,
-          },
-          409,
-        );
-      }
     }
 
     const convite = await criarConviteAdmin({ nome_exibicao: nomeExibicao, perfil, nomes });
