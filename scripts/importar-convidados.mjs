@@ -9,26 +9,28 @@
 //
 // - "grupo": qualquer identificador (número ou texto) que agrupe as pessoas
 //   que recebem o mesmo convite/mensagem. Repetido em cada linha do grupo.
-// - "nome_exibicao": como o grupo é chamado na saudação da mensagem
-//   (ex: "Olá, Pedro e Aléxia!"). Repetido em cada linha do grupo.
-// - "nome": nome da pessoa, é o que ela vai digitar no site pra se achar.
+// - "nome_exibicao": como o grupo aparece no /admin. Repetido em cada linha.
+// - "nome": nome completo da pessoa — é o que ela digita no site para entrar
+//   (comparação do nome inteiro, sem acento e sem maiúscula).
 // - "perfil": cerimonia_festa_after | festa_after — igual pra todo o grupo.
 //
-// Uso:
-//   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... \
-//   node scripts/importar-convidados.mjs convidados.csv
+// Antes de gravar, confere se algum nome se repete no próprio CSV ou já
+// existe no banco; se sim, para sem gravar nada e lista os casos.
 //
-// Não gera mais links individuais — o convite é o mesmo site pra todo mundo,
-// e cada grupo recebe apenas a mensagem personalizada por WhatsApp/e-mail,
-// sem link exclusivo (ex: "Olá, Pedro e Aléxia! Confirme em https://...").
+// Uso (lê SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY do .env.local):
+//   npm run importar-convidados -- convidados.csv --simular   (só confere)
+//   npm run importar-convidados -- convidados.csv             (grava)
 
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
+import { nomesJaExistentes, nomesRepetidos } from "../src/lib/nome-convidado.ts";
 
-const [, , csvPath] = process.argv;
+const argumentos = process.argv.slice(2);
+const simular = argumentos.includes("--simular");
+const csvPath = argumentos.find((a) => !a.startsWith("--"));
 
 if (!csvPath) {
-  console.error("Uso: node scripts/importar-convidados.mjs <arquivo.csv>");
+  console.error("Uso: node scripts/importar-convidados.mjs <arquivo.csv> [--simular]");
   process.exit(1);
 }
 
@@ -40,7 +42,9 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 
 function parseCsv(conteudo) {
   const linhas = conteudo.trim().split("\n");
@@ -51,9 +55,20 @@ function parseCsv(conteudo) {
   });
 }
 
+async function listarNomesDoBanco() {
+  const { data, error } = await supabase
+    .from("convidados")
+    .select("nome, convites(nome_exibicao)")
+    .limit(5000);
+  if (error) throw new Error("Erro ao ler os convidados do banco: " + error.message);
+  return (data ?? []).map((linha) => {
+    const convite = Array.isArray(linha.convites) ? linha.convites[0] : linha.convites;
+    return { nome: linha.nome, grupo: convite?.nome_exibicao ?? "" };
+  });
+}
+
 async function main() {
-  const conteudo = readFileSync(csvPath, "utf-8");
-  const registros = parseCsv(conteudo);
+  const registros = parseCsv(readFileSync(csvPath, "utf-8"));
 
   // Agrupa as linhas por "grupo"
   const grupos = new Map();
@@ -73,6 +88,31 @@ async function main() {
       grupos.set(grupo, { nome_exibicao, perfil, pessoas: [] });
     }
     grupos.get(grupo).pessoas.push(nome);
+  }
+
+  const todosOsNomes = [...grupos.values()].flatMap((g) => g.pessoas);
+  const porPerfil = {};
+  for (const g of grupos.values()) porPerfil[g.perfil] = (porPerfil[g.perfil] ?? 0) + g.pessoas.length;
+  console.log(`CSV: ${grupos.size} convites, ${todosOsNomes.length} pessoas`, porPerfil);
+
+  const repetidos = nomesRepetidos(todosOsNomes);
+  const jaNoBanco = nomesJaExistentes(todosOsNomes, await listarNomesDoBanco());
+
+  if (repetidos.length > 0) {
+    console.error(`\nNomes repetidos no CSV (${repetidos.length}):`);
+    for (const nome of repetidos) console.error(`  - ${nome}`);
+  }
+  if (jaNoBanco.length > 0) {
+    console.error(`\nNomes que já existem no banco (${jaNoBanco.length}):`);
+    for (const { nome, existente } of jaNoBanco) console.error(`  - ${nome} (grupo "${existente.grupo}")`);
+  }
+  if (repetidos.length > 0 || jaNoBanco.length > 0) {
+    console.error("\nNada foi gravado.");
+    process.exit(1);
+  }
+  if (simular) {
+    console.log("\nSimulação: nenhum conflito. Nada foi gravado.");
+    return;
   }
 
   let totalConvites = 0;
