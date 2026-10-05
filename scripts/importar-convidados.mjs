@@ -108,7 +108,10 @@ async function main() {
   }
   if (repetidos.length > 0 || jaNoBanco.length > 0) {
     console.error("\nNada foi gravado.");
-    process.exit(1);
+    // exitCode em vez de process.exit(): com conexões do cliente ainda
+    // abertas, process.exit() derruba o Node no Windows.
+    process.exitCode = 1;
+    return;
   }
   if (simular) {
     console.log("\nSimulação: nenhum conflito. Nada foi gravado.");
