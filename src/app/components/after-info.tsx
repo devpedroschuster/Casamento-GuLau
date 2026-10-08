@@ -14,7 +14,7 @@ const ITENS = [
 export default function AfterInfo() {
   return (
     <section id="after" className="secao fundo-rose overflow-hidden py-20 text-center">
-      <FundoFoto src="/dourado/after.png" />
+      <FundoFoto src="/dourado/after.png" empilhar={false} />
       <div className="relative z-10 max-w-2xl mx-auto px-6 texto-com-sombra">
         <p className="text-xs tracking-[0.35em] uppercase eyebrow-metal font-medium mb-4">Depois da festa</p>
         <h2 className="font-display italic text-3xl mb-6">O After</h2>
