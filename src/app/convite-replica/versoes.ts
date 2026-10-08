@@ -57,7 +57,7 @@ export const VERSAO_PRIMEIRO_HORARIO: Versao = {
       classe: "rc-abertura",
       luzes: { luzes: LUZES_ABERTURA, classe: "rc-luz-abertura" },
     },
-    { imagem: pagina(2, "/convite/02-contagem.jpg"), contagem: true },
+    { imagem: pagina(2, "/convite/02-contagem.png"), contagem: true },
     { imagem: pagina(3, "/convite/03-como-chegar.png"), areas: AREAS_MAPA },
     {
       imagem: pagina(4, "/convite/04-dress-code.png"),
@@ -85,7 +85,7 @@ export const VERSAO_PRIMEIRO_HORARIO: Versao = {
   },
   whatsappComprovante: WHATSAPP_COMPROVANTE,
   presentes: PRESENTES,
-  alvoContagem: "2026-11-28T17:00:00-03:00",
+  alvoContagem: "2026-11-28T18:00:00-03:00",
 };
 
 /** PROVISÓRIA: enquanto a arte do segundo horário não chega, a lista
