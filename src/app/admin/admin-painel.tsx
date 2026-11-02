@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { contemNome } from "@/lib/nome-convidado";
 import type { Perfil } from "@/lib/supabase-functions";
 import {
+  avisoExclusao,
   calcularResumo,
   entrou,
   filtrarPorSituacao,
   linhasDosConvites,
   pagouAfter,
+  removerPessoa,
   substituirPessoa,
   type ConviteStatus,
   type Contagem,
@@ -90,6 +92,10 @@ export default function AdminPainel() {
   const [salvando, setSalvando] = useState<Record<string, boolean>>({});
   const [erroAfter, setErroAfter] = useState<string | null>(null);
 
+  const [exclusao, setExclusao] = useState<{ id: string; nomeGrupo: string } | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExclusao, setErroExclusao] = useState<string | null>(null);
+
   const [formAberto, setFormAberto] = useState(false);
   const [nomeExibicao, setNomeExibicao] = useState("");
   const [perfil, setPerfil] = useState<Perfil>("cerimonia_festa_after");
@@ -160,6 +166,34 @@ export default function AdminPainel() {
         delete resto[linha.id];
         return resto;
       });
+    }
+  }
+
+  function abrirExclusao(linha: LinhaConvidado) {
+    setExclusao({ id: linha.id, nomeGrupo: linha.grupo });
+    setErroExclusao(null);
+  }
+
+  async function confirmarExclusao(linha: LinhaConvidado, nomeGrupo: string) {
+    const novoNome = linha.tamanhoGrupo > 1 && nomeGrupo.trim() !== linha.grupo ? nomeGrupo.trim() : undefined;
+    setExcluindo(true);
+    setErroExclusao(null);
+    try {
+      const res = await fetch(`/api/admin/convidados/${linha.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome_exibicao: novoNome }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao excluir");
+      setConvites((c) => removerPessoa(c, linha.id, novoNome));
+      setExclusao(null);
+    } catch (e) {
+      setErroExclusao(e instanceof Error ? e.message : "Erro ao excluir o convidado");
+      // A pessoa pode já ter saído ou o grupo pode já ter sido renomeado.
+      buscarLista();
+    } finally {
+      setExcluindo(false);
     }
   }
 
@@ -268,27 +302,87 @@ export default function AdminPainel() {
             <ul>
               {visiveis.map((l) => {
                 const pago = pagouAfter(l);
+                const aviso = avisoExclusao(l);
                 return (
-                  <li key={l.id} className="flex items-center gap-3 border-t border-champagne/30 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate">{l.nome}</p>
-                      <p className="text-xs text-platinum">
-                        {HORARIO[l.perfil]} · {entrou(l) ? "entrou" : "não entrou"} · {textoConfirmacao(l)}
-                        {l.tamanhoGrupo > 1 && ` · ${l.grupo}`}
-                      </p>
+                  <li key={l.id} className="border-t border-champagne/30 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate">{l.nome}</p>
+                        <p className="text-xs text-platinum">
+                          {HORARIO[l.perfil]} · {entrou(l) ? "entrou" : "não entrou"} · {textoConfirmacao(l)}
+                          {l.tamanhoGrupo > 1 && ` · ${l.grupo}`}
+                        </p>
+                        <button
+                          type="button"
+                          aria-label={`Excluir ${l.nome}`}
+                          disabled={excluindo}
+                          onClick={() => abrirExclusao(l)}
+                          className="mt-1 min-h-6 text-xs text-platinum underline underline-offset-2 hover:text-ivory disabled:opacity-60"
+                        >
+                          excluir
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        aria-pressed={pago}
+                        aria-label={`${pago ? "Desmarcar" : "Marcar"} After pago de ${l.nome}`}
+                        disabled={salvando[l.id]}
+                        onClick={() => alternarAfter(l)}
+                        className={`min-h-11 shrink-0 rounded-sm px-3 text-sm whitespace-nowrap disabled:opacity-60 ${
+                          pago ? "bg-champagne font-semibold text-onyx" : "border border-champagne text-ivory"
+                        }`}
+                      >
+                        {salvando[l.id] ? "salvando…" : pago ? "✓ After pago" : "Marcar After pago"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      aria-pressed={pago}
-                      aria-label={`${pago ? "Desmarcar" : "Marcar"} After pago de ${l.nome}`}
-                      disabled={salvando[l.id]}
-                      onClick={() => alternarAfter(l)}
-                      className={`min-h-11 shrink-0 rounded-sm px-3 text-sm whitespace-nowrap disabled:opacity-60 ${
-                        pago ? "bg-champagne font-semibold text-onyx" : "border border-champagne text-ivory"
-                      }`}
-                    >
-                      {salvando[l.id] ? "salvando…" : pago ? "✓ After pago" : "Marcar After pago"}
-                    </button>
+
+                    {exclusao?.id === l.id && (
+                      <div className="mt-3 space-y-3 rounded-sm border border-rose-gold p-4 text-sm">
+                        <p>
+                          Excluir <span className="font-medium">{l.nome}</span>? Isso não pode ser desfeito.
+                        </p>
+                        {aviso && <p className="font-medium">{aviso}</p>}
+
+                        {l.tamanhoGrupo === 1 ? (
+                          <p>É a última pessoa do grupo, então &ldquo;{l.grupo}&rdquo; também será apagado.</p>
+                        ) : (
+                          <label className="block space-y-1">
+                            <span className="text-platinum">Nome do grupo depois de excluir</span>
+                            <input
+                              type="text"
+                              value={exclusao.nomeGrupo}
+                              onChange={(e) => setExclusao({ ...exclusao, nomeGrupo: e.target.value })}
+                              className="w-full rounded-sm border border-champagne/50 bg-white/60 px-4 py-3 text-base text-ivory focus:outline-none focus:ring-1 focus:ring-champagne"
+                            />
+                          </label>
+                        )}
+
+                        {erroExclusao && (
+                          <p role="alert" className="font-medium">
+                            {erroExclusao}
+                          </p>
+                        )}
+
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={excluindo || (l.tamanhoGrupo > 1 && exclusao.nomeGrupo.trim().length === 0)}
+                            onClick={() => confirmarExclusao(l, exclusao.nomeGrupo)}
+                            className="min-h-11 rounded-sm bg-ivory px-4 text-creme disabled:opacity-60"
+                          >
+                            {excluindo ? "excluindo…" : "Confirmar exclusão"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={excluindo}
+                            onClick={() => setExclusao(null)}
+                            className="min-h-11 px-3 text-platinum hover:underline disabled:opacity-60"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 );
               })}
