@@ -92,6 +92,61 @@ export async function marcarAfterPago(id: string, pago: boolean): Promise<Pessoa
   return data as unknown as Pessoa | null;
 }
 
+/** Exclui uma pessoa e, se vier um novo nome, renomeia o grupo dela. Devolve
+    false se a pessoa não existe. */
+export async function excluirConvidado(id: string, novoNomeGrupo?: string): Promise<boolean> {
+  const supabase = criarClienteAdmin();
+
+  const { data: convidado, error: buscaError } = await supabase
+    .from("convidados")
+    .select("convite_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (buscaError) {
+    throw new Error("Erro ao buscar convidado: " + buscaError.message);
+  }
+  if (!convidado) return false;
+
+  const { count, error: contagemError } = await supabase
+    .from("convidados")
+    .select("id", { count: "exact", head: true })
+    .eq("convite_id", convidado.convite_id);
+
+  if (contagemError) {
+    throw new Error("Erro ao contar as pessoas do grupo: " + contagemError.message);
+  }
+
+  // Última pessoa: apaga o grupo inteiro (ela cai junto via ON DELETE CASCADE),
+  // porque um grupo vazio ficaria no banco sem aparecer em lugar nenhum.
+  if (count === 1) {
+    const { error: conviteError } = await supabase.from("convites").delete().eq("id", convidado.convite_id);
+    if (conviteError) {
+      throw new Error("Erro ao excluir o convite: " + conviteError.message);
+    }
+    return true;
+  }
+
+  // Renomeia antes de excluir: se a exclusão falhar, basta tentar de novo.
+  // Na ordem inversa, o nome antigo ficaria sem ter como corrigir pelo painel.
+  if (novoNomeGrupo) {
+    const { error: renomearError } = await supabase
+      .from("convites")
+      .update({ nome_exibicao: novoNomeGrupo })
+      .eq("id", convidado.convite_id);
+    if (renomearError) {
+      throw new Error("Erro ao renomear o convite: " + renomearError.message);
+    }
+  }
+
+  const { error: convidadoError } = await supabase.from("convidados").delete().eq("id", id);
+  if (convidadoError) {
+    throw new Error("Erro ao excluir convidado: " + convidadoError.message);
+  }
+
+  return true;
+}
+
 export async function criarConviteAdmin(params: {
   nome_exibicao: string;
   perfil: Perfil;

@@ -76,10 +76,13 @@ Configure as mesmas env vars do `.env.local` no painel da Vercel. Inclua também
 - URL: `/admin` (página escondida, sem link em nenhum lugar do site).
 - O que faz: cadastra grupos de convidados (nome do grupo, lista e as pessoas de
   cada grupo) e mostra, por pessoa, se já fez check-in e, por etapa, a confirmação
-  de presença (cerimônia, festa, after) e o status do pagamento do after.
+  de presença (cerimônia, festa, after) e o status do pagamento do after. Também
+  exclui pessoas: a exclusão é definitiva, e excluir a última pessoa de um grupo
+  apaga o grupo junto.
 - **Não tem login.** A única proteção é a URL não ser divulgada — não compartilhe o
-  endereço. A rota que alimenta o painel (`/api/admin/convites`) usa a service role
-  key no servidor.
+  endereço. Quem tiver o endereço pode ver, cadastrar e excluir convidados; excluir
+  não pede senha. A rota que alimenta o painel (`/api/admin/convites`) usa a service
+  role key no servidor.
 - A Edge Function `get-convidado` está obsoleta: foi substituída por
   `buscar-convite` (busca pelo nome digitado, em um único link para todos).
 

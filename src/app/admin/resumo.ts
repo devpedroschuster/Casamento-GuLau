@@ -77,3 +77,27 @@ export function substituirPessoa(
       : c,
   );
 }
+
+/** Cópia dos convites sem a pessoa: o grupo pode ganhar um novo nome e some
+    junto com a última pessoa. */
+export function removerPessoa(convites: ConviteStatus[], id: string, novoNomeGrupo?: string): ConviteStatus[] {
+  return convites
+    .map((c) =>
+      c.convidados.some((p) => p.id === id)
+        ? {
+            ...c,
+            nome_exibicao: novoNomeGrupo ?? c.nome_exibicao,
+            convidados: c.convidados.filter((p) => p.id !== id),
+          }
+        : c,
+    )
+    .filter((c) => c.convidados.length > 0);
+}
+
+/** O que vale avisar antes de excluir alguém. */
+export function avisoExclusao(p: PessoaStatus): string | null {
+  if (pagouAfter(p)) return "Essa pessoa já pagou o After.";
+  if (confirmou(p)) return "Essa pessoa já confirmou presença.";
+  if (p.confirmou_festa === false) return "Essa pessoa já respondeu que não vai.";
+  return null;
+}
