@@ -25,15 +25,21 @@ test("1º horário (cerimonia_festa_after): arte e contagem das 18:00", () => {
   assert.equal(v.alvoContagem, "2026-11-28T18:00:00-03:00");
 });
 
-test("2º horário (festa_after): arte e contagem das 23:00", () => {
+test("2º horário (festa_after): arte e contagem das 22:00, prazo de 10 de novembro", () => {
   const v = versaoDoPerfil("festa_after");
-  assert.equal(v.telas[1].imagem.src, "/convite/02-contagem-23h.png");
+  assert.equal(v.telas[1].imagem.src, "/convite/02-contagem-22h.png");
   assert.equal(v.telas[1].contagem, true);
-  assert.equal(v.alvoContagem, "2026-11-28T23:00:00-03:00");
+  assert.equal(v.telas[6].imagem.src, "/convite/07-confirmar-10nov.png");
+  assert.equal(v.telas[6].confirmar, true);
+  assert.equal(v.alvoContagem, "2026-11-28T22:00:00-03:00");
 });
 
-test("os dois horários só diferem na arte da contagem e no horário", () => {
-  const resto = (v) => ({ ...v, telas: v.telas.filter((_, i) => i !== 1), alvoContagem: null });
+test("o 1º horário continua com a arte de confirmar original", () => {
+  assert.equal(versaoDoPerfil("cerimonia_festa_after").telas[6].imagem.src, "/convite/07-confirmar.png");
+});
+
+test("os dois horários só diferem na contagem, no prazo e no horário", () => {
+  const resto = (v) => ({ ...v, telas: v.telas.filter((_, i) => i !== 1 && i !== 6), alvoContagem: null });
   assert.deepEqual(resto(VERSAO_SEGUNDO_HORARIO), resto(VERSAO_PRIMEIRO_HORARIO));
 });
 
