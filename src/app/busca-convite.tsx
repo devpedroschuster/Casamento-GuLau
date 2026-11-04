@@ -91,7 +91,7 @@ export default function BuscaConvite() {
 
   return (
     <section id="checkin" className="secao overflow-hidden py-20">
-      <FundoFoto src="/dourado/confirmar-presenca.png" />
+      <FundoFoto src="/dourado/confirmar-presenca.png" empilhar={false} />
       <div className="relative z-10 max-w-md mx-auto px-6 texto-com-sombra">
       <div className="px-8 py-10 space-y-7 text-center">
         <div className="space-y-3">

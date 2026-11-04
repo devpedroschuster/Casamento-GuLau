@@ -16,7 +16,13 @@ import Image, { getImageProps } from "next/image";
     faixa do meio — vazia, ampliada e borrada — e corta as bordas. Por isso,
     até 767px de largura essas artes aparecem inteiras, no tamanho natural,
     empilhadas ao longo da seção (ver .fundo-foto-quadros). Fotos que não são
-    esses quadros (ex: a do hero) continuam sempre em cover. */
+    esses quadros (ex: a do hero) continuam sempre em cover.
+
+    Exceção: as artes com um cartão de vidro desenhado dentro (After e
+    check-in) foram feitas para o cartão abraçar o conteúdo de uma seção só.
+    Empilhadas, o cartão fica mais estreito que o texto e a emenda corta o
+    conteúdo ao meio; elas passam `empilhar={false}` e esticam junto com a
+    seção (cover), como antes. */
 const ehQuadroVertical = (src: string) => src.startsWith("/dourado/");
 
 /** Converte o srcSet do next/image (`url 1x, url 2x`) em `image-set()` pra
@@ -30,8 +36,15 @@ function paraImageSet(srcSet = "") {
   return `image-set(${candidatos.join(", ")})`;
 }
 
-export default function FundoFoto({ src, prioridade = false }: { src: string; prioridade?: boolean }) {
-  const empilhar = ehQuadroVertical(src);
+export default function FundoFoto({
+  src,
+  prioridade = false,
+  empilhar = ehQuadroVertical(src),
+}: {
+  src: string;
+  prioridade?: boolean;
+  empilhar?: boolean;
+}) {
   const quadro = empilhar
     ? paraImageSet(getImageProps({ src, alt: "", width: 600, height: 900 }).props.srcSet)
     : null;
@@ -42,7 +55,7 @@ export default function FundoFoto({ src, prioridade = false }: { src: string; pr
         src={src}
         alt=""
         fill
-        sizes="100vw"
+        sizes="(max-width: 767px) 190vw, 100vw"
         priority={prioridade}
         className="object-cover scale-[1.02]"
       />

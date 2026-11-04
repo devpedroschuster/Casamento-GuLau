@@ -29,7 +29,7 @@ export default function Informacoes() {
         <h2 className="font-display italic text-3xl mb-12 text-center">O grande dia</h2>
         <div className="grid sm:grid-cols-2 gap-5">
           {CARDS.map((c) => (
-            <div key={c.titulo} className="moldura p-6">
+            <div key={c.titulo} className="moldura p-6 sm:last:odd:col-span-2">
               <Cantos />
               <h3 className="font-display italic text-xl mb-2 text-champagne text-center">{c.titulo}</h3>
               <p className="text-platinum/80 text-sm leading-relaxed text-center">{c.texto}</p>
