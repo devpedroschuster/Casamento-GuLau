@@ -50,9 +50,9 @@ const pagina = (n: number, src: string): Imagem => ({
   alt: `Página ${n}`,
 });
 
-/** As 7 telas do convite. Entre os horários só muda a 2ª, que traz o horário
-    desenhado na arte. */
-const telas = (contagem: string): TelaConfig[] => [
+/** As 7 telas do convite. Entre os horários só mudam a 2ª, com o horário
+    desenhado na arte, e a 7ª, com o prazo de confirmação. */
+const telas = (contagem: string, confirmar: string): TelaConfig[] => [
   {
     imagem: pagina(1, "/convite/01-abertura.png"),
     classe: "rc-abertura",
@@ -67,11 +67,11 @@ const telas = (contagem: string): TelaConfig[] => [
   },
   { imagem: pagina(5, "/convite/05-indicacoes.png"), areas: AREAS_INDICACOES },
   { imagem: pagina(6, "/convite/06-presentes.png"), presentes: true },
-  { imagem: pagina(7, "/convite/07-confirmar.png"), confirmar: true },
+  { imagem: pagina(7, confirmar), confirmar: true },
 ];
 
 export const VERSAO_PRIMEIRO_HORARIO: Versao = {
-  telas: telas("/convite/02-contagem-18h.png"),
+  telas: telas("/convite/02-contagem-18h.png", "/convite/07-confirmar.png"),
   afterConfirmada: {
     src: "/convite/after-1-confirmada.png",
     largura: 1024,
@@ -93,11 +93,11 @@ export const VERSAO_PRIMEIRO_HORARIO: Versao = {
 };
 
 /** Segundo horário (lista `festa_after`): o mesmo convite, com a arte e a
-    contagem das 23:00. */
+    contagem das 22:00 e confirmação até 10 de novembro. */
 export const VERSAO_SEGUNDO_HORARIO: Versao = {
   ...VERSAO_PRIMEIRO_HORARIO,
-  telas: telas("/convite/02-contagem-23h.png"),
-  alvoContagem: "2026-11-28T23:00:00-03:00",
+  telas: telas("/convite/02-contagem-22h.png", "/convite/07-confirmar-10nov.png"),
+  alvoContagem: "2026-11-28T22:00:00-03:00",
 };
 
 export function versaoDoPerfil(perfil: Perfil): Versao {
